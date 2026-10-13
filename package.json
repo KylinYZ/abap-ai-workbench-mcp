@@ -9,6 +9,7 @@
   "files": [
     "dist",
     "!dist/__tests__",
+    "!dist/**/__tests__",
     ".env.example",
     "docs/evidence/repository-creation-maturity-evidence.json",
     "docs/evidence/repository-creation-ddic-domain-real-dev-verified.md",
