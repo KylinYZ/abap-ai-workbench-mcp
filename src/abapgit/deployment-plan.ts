@@ -71,8 +71,10 @@ export function buildDeploymentPlan(
   parsed: AbapGitParseResult,
   packageName: string
 ): AbapGitDeploymentPlan {
-  if (!/^\$[A-Z0-9_]+$/.test(packageName)) {
-    throw new Error(`buildDeploymentPlan: package "${packageName}" must be a local package ($ prefix).`)
+  // 包名只做形态校验；$ 本地包与 transportable 包均接受——模式语义（本地包
+  // 仅 PROG / transportable 全型）由调用方（受控导入工作流）按传输号判定。
+  if (!/^\$?(?:\/[A-Z0-9_]+\/)?[A-Z][A-Z0-9_]{0,29}$/.test(packageName)) {
+    throw new Error(`buildDeploymentPlan: package "${packageName}" is not a valid ABAP repository name.`)
   }
   const skips: DeploymentSkip[] = parsed.skippedObjects.map(skip => ({
     objectType: skip.type,

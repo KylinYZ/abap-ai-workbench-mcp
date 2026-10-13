@@ -2,7 +2,7 @@
 
 import { config } from 'dotenv';
 import { randomUUID } from 'crypto';
-// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次（见 CHANGELOG）。
+// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次；0.9.2：analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套（见 CHANGELOG）。
 // 低层 Server 保留自管工具目录模式；stdio 传输生命周期由 serveStdio 拥有。
 import { Server, inputRequired } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
@@ -117,6 +117,7 @@ import { UsageExamplesHandlers } from './handlers/UsageExamplesHandlers.js';
 import { TextPoolHandlers } from './handlers/TextPoolHandlers.js';
 import { TextPoolWorkflow } from './safe/TextPoolWorkflow.js';
 import { Ui5WriteHandlers } from './handlers/Ui5WriteHandlers.js';
+import { RepositoryObjectImportHandlers } from './handlers/RepositoryObjectImportHandlers.js';
 import { HealthHandlers } from './handlers/HealthHandlers.js';
 import { GitBridgeHandlers, gitBridgeTargetFromEnv } from './handlers/GitBridgeHandlers.js';
 import { ReportHandlers } from './handlers/ReportHandlers.js';
@@ -127,6 +128,8 @@ import { AnalyzeLintHandlers } from './handlers/AnalyzeLintHandlers.js';
 import type { HealthCapability } from './adt/HealthApi.js';
 import { runUnitTest } from './adt/api/unittest.js';
 import { Ui5WriteWorkflow } from './safe/Ui5WriteWorkflow.js';
+import { RepositoryObjectImportWorkflow, type RepositoryImportAdtClient } from './safe/RepositoryObjectImportWorkflow.js';
+import { createImportObjectShell } from './adt/api/ImportShellCreation.js';
 import { createUi5WriteClient } from './adt/Ui5FilestoreApi.js';
 import { createUsageExamplesClient } from './adt/UsageExamplesApi.js';
 import { createClusterReadClient } from './adt/ClusterReadApi.js';
@@ -254,6 +257,7 @@ export class AbapAdtServer extends Server {
   private usageExamplesHandlers: UsageExamplesHandlers;
   private textPoolHandlers: TextPoolHandlers;
   private ui5WriteHandlers: Ui5WriteHandlers;
+  private repositoryObjectImportHandlers: RepositoryObjectImportHandlers;
   private healthHandlers: HealthHandlers;
   private gitBridgeHandlers: GitBridgeHandlers;
   private reportHandlers: ReportHandlers;
@@ -308,7 +312,7 @@ export class AbapAdtServer extends Server {
     super(
       {
         name: "abap-ai-workbench-mcp",
-        version: "0.9.1",
+        version: "0.9.2",
       },
       {
         capabilities: {
@@ -710,6 +714,48 @@ export class AbapAdtServer extends Server {
         const plan = ui5WriteWorkflow.status(planId);
         return { kind: plan.kind, appName: plan.appName, filePath: plan.filePath,
           fileCount: plan.oldState.fileCount, systemHost: plan.systemHost, client: plan.client };
+      }
+    });
+    // 受控对象导入链（deploy-zip/fileio.import-export 关缺口）：abapGit ZIP →
+    // $ 本地包批量受控导入（preview 冻结逐对象存在性/漂移基线 → 原生确认 →
+    // 逐对象建/改+锁链+语法检查+激活+readback）。锁/写/激活是 stateful 专属，
+    // 必须绑写域主会话 adtClient（与受控创建链同面）；建壳走无传输号路径
+    // （本地包对象不进 CTS，corrNr 不携带）。
+    const repositoryImportClient: RepositoryImportAdtClient = {
+      searchObject: (query, objType, max) => this.adtClient.searchObject(query, objType, max),
+      objectStructure: (objectUrl, version) => this.adtClient.objectStructure(objectUrl, version),
+      getObjectSource: (objectSourceUrl, options) => this.adtClient.getObjectSource(objectSourceUrl, options),
+      setObjectSource: (objectSourceUrl, source, lockHandle, transport) =>
+        this.adtClient.setObjectSource(objectSourceUrl, source, lockHandle, transport),
+      lock: (objectUrl, accessMode) => this.adtClient.lock(objectUrl, accessMode),
+      unLock: (objectUrl, lockHandle) => this.adtClient.unLock(objectUrl, lockHandle),
+      activate: (object, preauditRequested) => this.adtClient.activate(object, preauditRequested),
+      readControlledPackage: packageName => this.adtClient.readControlledPackage(packageName),
+      transportInfo: (objectUrl, devClass, operation) => this.adtClient.transportInfo(objectUrl, devClass, operation),
+      transportDetails: transportNumber => this.adtClient.transportDetails(transportNumber),
+      createImportShell: input => createImportObjectShell(this.adtClient.httpClient, input)
+    };
+    const repositoryImportWorkflow = new RepositoryObjectImportWorkflow({
+      client: repositoryImportClient,
+      policy: this.safetyPolicy,
+      audit: auditLogger
+    }, this.safetyPolicy.planTtlMs);
+    this.repositoryObjectImportHandlers = new RepositoryObjectImportHandlers(repositoryImportWorkflow, {
+      supportsFormElicitation: () => Boolean(this.currentClientCapabilities()?.elicitation?.form),
+      // 部署级自动确认开关：SAP_MCP_CONFIRMATION_MODE=auto（仅 DEV）时各确认链跳过人工表单
+      autoApprove: () => this.safetyPolicy.confirmationAutoApprove,
+      elicitInput: (params, timeoutMs) => this.elicitViaActiveRequest(params, timeoutMs),
+      planSummary: planId => {
+        const plan = repositoryImportWorkflow.status(planId);
+        return {
+          packageName: plan.packageName,
+          objectCount: plan.objects.length,
+          createCount: plan.objects.filter(item => item.action === 'create').length,
+          updateCount: plan.objects.filter(item => item.action === 'update').length,
+          skipCount: plan.skips.length,
+          systemHost: plan.systemHost,
+          client: plan.client
+        };
       }
     });
 
@@ -1216,6 +1262,7 @@ export class AbapAdtServer extends Server {
       ...this.messageTextHandlers.getTools(),
       ...this.textPoolHandlers.getTools(),
       ...this.ui5WriteHandlers.getTools(),
+      ...this.repositoryObjectImportHandlers.getTools(),
       ...this.cloneObjectHandlers.getTools(),
       ...this.renameControlledHandlers.getTools()
     ];
@@ -1540,6 +1587,12 @@ export class AbapAdtServer extends Server {
         if ((this.safetyPolicy.toolProfile === 'development' || this.safetyPolicy.toolProfile === 'development-workbench')
           && this.ui5WriteHandlers.supports(toolName)) {
           return this.ui5WriteHandlers.handle(toolName, limitedArguments);
+        }
+        // 受控对象导入链（deploy-zip/fileio.import-export）：同型分派
+        // （DEV + workbench/development）。
+        if ((this.safetyPolicy.toolProfile === 'development' || this.safetyPolicy.toolProfile === 'development-workbench')
+          && this.repositoryObjectImportHandlers.supports(toolName)) {
+          return this.repositoryObjectImportHandlers.handle(toolName, limitedArguments);
         }
         // 受控对象克隆链：profile/role 门控已由 assertToolOperationAllowed 前置把关，
         // catalog 成员检查保证非 development/development-workbench profile 不可见。

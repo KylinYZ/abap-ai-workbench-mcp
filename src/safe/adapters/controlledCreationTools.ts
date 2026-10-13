@@ -84,6 +84,12 @@ export interface ControlledCreationAdtClient {
     version?: string
   ): Promise<SyntaxCheckResult[]>
   activate(objectName: string, objectUrl: string, mainInclude?: string, preauditRequested?: boolean): Promise<ActivationResult>
+  // typed objectReference 重载：body 带 adtcore:type/parentUri（激活器定位
+  // 非活动版本所需；字符串简写在部分系统上激活异常——真机因素矩阵定案）
+  activate(
+    object: { 'adtcore:uri': string; 'adtcore:type': string; 'adtcore:name': string; 'adtcore:parentUri': string },
+    preauditRequested?: boolean
+  ): Promise<ActivationResult>
   validateControlledTableShell(input: Pick<ControlledTableShellInput, 'name' | 'description'>): Promise<ValidationResult>
   createControlledTableShell(input: ControlledTableShellInput): Promise<ControlledTableCreationResult>
   readControlledTable(name: string, version?: 'active' | 'inactive' | 'workingArea'): Promise<ControlledTableDocument>

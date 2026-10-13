@@ -30,16 +30,16 @@ describe('tool catalog integrity and raw advanced role policy', () => {
 
   it.each([
     ['safe', 7],
-    // development 202：201 + readClusterTable（cluster_read 收编，只读组合面）
-    ['development', 205],
-    // diagnostic-readonly 147：146 + readClusterTable（只读诊断入口）
+    // development 208：205 + 受控导入三件套（deploy-zip/fileio.import-export）
+    ['development', 208],
+    // diagnostic-readonly 150：只读诊断入口（不含受控导入写链）
     ['diagnostic-readonly', 150],
-    // legacy-full 214：213 + readClusterTable（专家完整面）
+    // legacy-full 220：专家完整面（不含受控导入链——同克隆/重命名链不进 legacy）
     ['legacy-full', 220],
-    // development-workbench 176：175 + readClusterTable（workbench 显式名单）
-    ['development-workbench', 182],
+    // development-workbench 185：182 + 受控导入三件套（workbench 显式名单）
+    ['development-workbench', 185],
     ['business-readonly', 18],
-    // operations-readonly 55：54 + readClusterTable（运维诊断的集群表读取）
+    // operations-readonly 58：运维只读面（不含受控导入写链）
     ['operations-readonly', 58]
   ])('locks the DEV %s catalog at %i unique tools', (profile, expected) => {
     const server = configureServer('DEV', profile);
@@ -200,6 +200,32 @@ describe('tool catalog integrity and raw advanced role policy', () => {
     expect((server as any).toolCatalog.map((tool: { name: string }) => tool.name))
       .not.toContain('listRepositoryObjectCreationCapabilities');
     await expect((server as any).dispatchTool('listRepositoryObjectCreationCapabilities', {}))
+      .rejects.toMatchObject({ code: 'POLICY_DENIED' });
+    expect(handle).not.toHaveBeenCalled();
+  });
+
+  it('exposes the controlled repository import chain only in DEV development profiles', () => {
+    const expected = [
+      'previewRepositoryObjectImport', 'applyRepositoryObjectImport', 'getRepositoryObjectImportStatus'
+    ];
+    for (const profile of ['development', 'development-workbench']) {
+      const names = (configureServer('DEV', profile) as any).toolCatalog.map((tool: { name: string }) => tool.name);
+      expect(names).toEqual(expect.arrayContaining(expected));
+    }
+    for (const profile of ['safe', 'diagnostic-readonly', 'legacy-full', 'business-readonly', 'operations-readonly']) {
+      const names = (configureServer('DEV', profile) as any).toolCatalog.map((tool: { name: string }) => tool.name);
+      expect(names).toEqual(expect.not.arrayContaining(expected));
+    }
+  });
+
+  it.each(['QAS', 'PRD', '', 'UNKNOWN'])('hides and rejects the controlled repository import chain for role %p', async role => {
+    const server = configureServer(role, 'development');
+    const handlers = (server as any).repositoryObjectImportHandlers;
+    const handle = jest.spyOn(handlers, 'handle');
+
+    expect((server as any).toolCatalog.map((tool: { name: string }) => tool.name))
+      .not.toContain('previewRepositoryObjectImport');
+    await expect((server as any).dispatchTool('previewRepositoryObjectImport', { packageName: '$TMP' }))
       .rejects.toMatchObject({ code: 'POLICY_DENIED' });
     expect(handle).not.toHaveBeenCalled();
   });

@@ -215,7 +215,16 @@ export class SourceObjectCreationAdapter implements RepositoryObjectCreationAdap
 
     let activation
     try {
-      activation = await this.client.activate(input.name, objectUrl, undefined, true)
+      // typed objectReference（必须带 adtcore:type/parentUri）：字符串简写 body
+      // 缺这两个字段时激活器无法定位非活动版本——真机表现为"同名已存在/
+      // 骨架激活"等假象（sap-dev+sap-demo 双系统 2026-10-09 实证，与受控导入
+      // 链同根因，见 docs/evidence/repository-import-real-dev-verified.md）
+      activation = await this.client.activate({
+        'adtcore:uri': objectUrl,
+        'adtcore:type': input.adtType,
+        'adtcore:name': input.name,
+        'adtcore:parentUri': payload.packageUrl
+      }, true)
     } catch (error) {
       throw unknownWrite('Source object activation', error)
     }

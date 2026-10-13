@@ -75,6 +75,20 @@ export const CONTROLLED_UI5_WRITE_TOOL_NAMES = new Set([
   'getUi5OperationStatus'
 ]);
 
+/**
+ * 受控对象导入链（deploy-zip/fileio.import-export 受控导入工作流）。
+ * → preview（只读预检：离线解析 abapGit ZIP + 逐对象存在性/漂移基线 + 范围
+ *   校验，冻结 immutable plan）；apply（原生确认后单次批量执行：逐对象漂移
+ *   复核 → 建/改 → 锁链 → 激活 → readback，首失败即停）；status（本地读取）。
+ * 目标强制 `$` 本地包（无传输号不进 CTS）；仅 CLAS/INTF/PROG。
+ * 仅 DEV 角色 + development/development-workbench。
+ */
+export const CONTROLLED_REPOSITORY_IMPORT_TOOL_NAMES = new Set([
+  'previewRepositoryObjectImport',
+  'applyRepositoryObjectImport',
+  'getRepositoryObjectImportStatus'
+]);
+
 export const CONTROLLED_CLONE_TOOL_NAMES = new Set([
   'previewCloneObject',
   'applyCloneObject',
@@ -136,7 +150,8 @@ const LOCAL_TOOL_NAMES = new Set([
   'getTransportCreationStatus', 'getTransportCleanupStatus',
   'getMessageTextChangeStatus',
   'getTextPoolChangeStatus',
-  'getUi5OperationStatus'
+  'getUi5OperationStatus',
+  'getRepositoryObjectImportStatus'
 ]);
 
 const READ_ONLY_TOOL_NAMES = new Set([
@@ -205,6 +220,9 @@ const READ_ONLY_TOOL_NAMES = new Set([
   // 受控 UI5 filestore preview（F5：ui5.write）：只读预检（存在性/漂移基线/
   // 内容上限）+冻结 plan，不触碰写路径
   'previewUi5Operation',
+  // 受控对象导入 preview（deploy-zip/fileio.import-export）：只读预检（ZIP
+  // 离线解析 + 存在性/漂移基线 + 范围校验）+冻结 plan，不触碰写路径
+  'previewRepositoryObjectImport',
   // 受控对象克隆 preview（crud.clone-object 一站式）：只读预检（源码快照+
   // 本地声明改名），不触碰写路径
   'previewCloneObject',
@@ -328,7 +346,10 @@ const ADVANCED_MUTATION_TOOL_NAMES = new Set([
   'applyTransportCreation',
   // 受控传输请求清理 apply（空请求边界）：仅删"未释放+零对象+本人属主"请求，
   // 单确认单执行 + 缺席验证；非空/已释放/他人请求仍不可删
-  'applyTransportCleanup'
+  'applyTransportCleanup',
+  // 受控对象导入 apply（deploy-zip/fileio.import-export）：批量 repository 写入
+  // （建/改 + 激活），逐对象漂移复核 + readback，单确认单执行
+  'applyRepositoryObjectImport'
 ]);
 
 const QUALITY_EXECUTION_TOOL_NAMES = new Set([
@@ -374,7 +395,8 @@ export const CONTROLLED_WRITE_CHAIN_READONLY_TOOLS = new Set<string>([
   ...CONTROLLED_TRANSPORT_CREATION_TOOL_NAMES,
   ...CONTROLLED_TRANSPORT_CLEANUP_TOOL_NAMES,
   ...CONTROLLED_RENAME_TOOL_NAMES,
-  ...CONTROLLED_ACTIVATION_TOOL_NAMES
+  ...CONTROLLED_ACTIVATION_TOOL_NAMES,
+  ...CONTROLLED_REPOSITORY_IMPORT_TOOL_NAMES
 ]);
 
 export function toolOperationClass(toolName: string): ToolOperationClass | undefined {
@@ -397,6 +419,8 @@ export function isToolAllowedForSystemRole(toolName: string, systemRole: string)
   if (CONTROLLED_TEXT_POOL_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
   // 受控 UI5 filestore 写链：任何一环都不应在 QAS/PRD/未知角色下面世
   if (CONTROLLED_UI5_WRITE_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
+  // 受控对象导入链（批量 repository 写入）：任何一环都不应在 QAS/PRD 下面世
+  if (CONTROLLED_REPOSITORY_IMPORT_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
   // git 域桥接（gitTypes/gitExport）：helper 只部署于 DEV，QAS/PRD 无服务面
   if (toolName === 'gitTypes' || toolName === 'gitExport') return systemRole === 'DEV';
   // 受控传输创建链：任何一环都不应在 QAS/PRD/未知角色下面世（仅创建、DEV 专属）
@@ -552,6 +576,16 @@ export function assertToolOperationAllowed(toolName: string, profile: ToolProfil
       'POLICY_DENIED',
       'policy',
       'Controlled transport cleanup requires DEV development or development-workbench profile.'
+    );
+  }
+  // 受控对象导入链（deploy-zip/fileio.import-export）：仅 DEV +
+  // development/development-workbench；目标强制 $ 本地包，批量写入。
+  if (CONTROLLED_REPOSITORY_IMPORT_TOOL_NAMES.has(toolName)
+    && ((profile !== 'development' && profile !== 'development-workbench') || systemRole !== 'DEV')) {
+    throw new SafeAbapError(
+      'POLICY_DENIED',
+      'policy',
+      'Controlled repository import requires DEV development or development-workbench profile.'
     );
   }
   if (QUALITY_EXECUTION_TOOL_NAMES.has(toolName)

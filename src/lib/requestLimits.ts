@@ -51,6 +51,10 @@ const STRICT_TOOL_FIELDS: Record<string, readonly string[]> = {
   previewRepositoryObjectCleanup: ['objectKind', 'name', 'parentName', 'creationPlanId'],
   applyRepositoryObjectCleanup: ['cleanupPlanId'],
   getRepositoryObjectCleanupStatus: ['cleanupPlanId'],
+  // 受控对象导入链（deploy-zip/fileio.import-export）：ZIP 二选一 + 过滤器
+  previewRepositoryObjectImport: ['packageName', 'transportRequest', 'zipBase64', 'zipPath', 'nameFilter', 'typeFilter'],
+  applyRepositoryObjectImport: ['importPlanId'],
+  getRepositoryObjectImportStatus: ['importPlanId'],
   previewDdicPropertyChange: ['operation'],
   applyDdicPropertyChange: ['operationPlanId'],
   previewPackageChange: ['objectType', 'objectName', 'oldPackage', 'newPackage', 'transportRequest'],
@@ -143,6 +147,14 @@ function assertAdvancedToolArgumentShape(toolName: string, argumentsValue: Argum
 
   if (argumentsValue.checks !== undefined) {
     assertBoundedStringArray(argumentsValue.checks, 'checks', 16, 64);
+  }
+  if (toolName === 'previewRepositoryObjectImport') {
+    // zipPath 是本地绝对路径（允许盘符/斜杠），限长+禁控制字符；zipBase64 的
+    // 体积由全局 maxArgumentBytes 兜底，这里只做形态存在性交给工作流校验
+    assertBoundedIdentifier(argumentsValue.zipPath, 'zipPath', 1024);
+    if (argumentsValue.typeFilter !== undefined) {
+      assertBoundedStringArray(argumentsValue.typeFilter, 'typeFilter', 3, 8);
+    }
   }
   if (argumentsValue.elements !== undefined && (!Array.isArray(argumentsValue.elements) || argumentsValue.elements.length > 500)) {
     throw new McpError(400, 'elements must be an array with no more than 500 entries.');

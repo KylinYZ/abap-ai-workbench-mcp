@@ -155,7 +155,12 @@ export const DEVELOPMENT_WORKBENCH_TOOL_NAMES = new Set([
   // 三件套，四 kind（create_app/upload_file/delete_file/delete_app）
   'previewUi5Operation',
   'applyUi5Operation',
-  'getUi5OperationStatus'
+  'getUi5OperationStatus',
+  // 受控对象导入链（deploy-zip/fileio.import-export）：abapGit ZIP → $ 本地包
+  // 批量受控导入三件套
+  'previewRepositoryObjectImport',
+  'applyRepositoryObjectImport',
+  'getRepositoryObjectImportStatus'
 ]);
 
 export const BUSINESS_READONLY_TOOL_NAMES = new Set([

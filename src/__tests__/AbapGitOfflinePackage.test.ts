@@ -178,11 +178,15 @@ describe('deployment plan builder (Stage 2 executor input contract)', () => {
     expect(plan.skips).toEqual([])
   });
 
-  it('rejects non-local target packages', () => {
+  it('accepts both $ local and transportable package names, rejects invalid names', () => {
     const parsed = parseAbapGitOfflineEntries(readZipWithObjects([
       { path: 'src/zabapgit.prog.abap', text: 'REPORT zabapgit.' }
     ]))
-    expect(() => buildDeploymentPlan(parsed, 'ABAPGIT')).toThrow(/local package/)
+    // $ 本地包与 transportable 包均接受（模式语义由受控导入工作流按传输号判定）
+    expect(buildDeploymentPlan(parsed, '$ABAPGIT').packageName).toBe('$ABAPGIT')
+    expect(buildDeploymentPlan(parsed, 'ABAPGIT').packageName).toBe('ABAPGIT')
+    expect(() => buildDeploymentPlan(parsed, 'abapgit')).toThrow(/valid ABAP repository name/)
+    expect(() => buildDeploymentPlan(parsed, '')).toThrow(/valid ABAP repository name/)
   });
 });
 

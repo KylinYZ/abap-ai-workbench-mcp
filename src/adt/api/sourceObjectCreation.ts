@@ -62,7 +62,9 @@ interface SourceObjectContract {
 
 const SOURCE_OBJECT_VALIDATION_ACCEPT = 'application/vnd.sap.as+xml'
 
-const CONTRACTS: Record<ControlledSourceObjectKind, SourceObjectContract> = {
+// 导出给受控导入链复用（同款 Content-Type/Accept/collection 契约，保证建壳
+// 请求形态与受控创建链逐字节一致）；修改契约时两条链同步生效。
+export const CONTRACTS: Record<ControlledSourceObjectKind, SourceObjectContract> = {
   ABAP_CLASS: {
     validationPath: '/sap/bc/adt/oo/validation/objectname',
     collectionPath: '/sap/bc/adt/oo/classes',
