@@ -2411,18 +2411,29 @@
         ]
       },
       "mcp": {
-        "status": "INTENTIONAL_RESTRICTION",
-        "taskPath": [],
-        "profiles": [],
-        "systemRoles": [],
-        "restrictionReason": "批量对象导入属于高风险写入，未经受控导入工作流（immutable plan + 原生确认 + readback）评审。",
-        "liftCondition": "受控导入工作流设计评审通过后另立任务，禁止一次性开放。"
+        "status": "PARTIAL",
+        "taskPath": [
+          "previewRepositoryObjectImport",
+          "applyRepositoryObjectImport",
+          "getRepositoryObjectImportStatus"
+        ],
+        "profiles": [
+          "development",
+          "development-workbench"
+        ],
+        "systemRoles": [
+          "DEV"
+        ],
+        "restrictionReason": "受控导入工作流已落地并真机验证 PROG 方向（sap-demo 10/10 PASS，证据 docs/evidence/repository-import-real-dev-verified.md）；INTF/CLAS 方向被 sap-demo 环境级激活故障阻塞（任何新建 OO 对象激活报 A class already exists，与建壳路径/目标包/preaudit/transport 无关的四因素对照矩阵留档，同期 executeAbap PROG 正常、受控创建链同形态 09-30 曾全绿）；FUGR 与传输号路径不在 v1 范围。",
+        "liftCondition": "环境恢复后补验 INTF/CLAS 方向（SMOKE 恢复三对象形态全绿）即晋级 EQUIVALENT；FUGR 如有需求按对象粒度另立任务。"
       },
       "priority": "P2",
       "evidence": [
+        "automation",
+        "real-dev-verified",
         "source-audit"
       ],
-      "nextMilestone": ""
+      "nextMilestone": "OO 方向环境恢复后补验"
     },
     {
       "id": "install.diagnostics",
@@ -2483,18 +2494,29 @@
         ]
       },
       "mcp": {
-        "status": "INTENTIONAL_RESTRICTION",
-        "taskPath": [],
-        "profiles": [],
-        "systemRoles": [],
-        "restrictionReason": "本地文件往返与批量导入导出涉及工作区副作用与批量 SAP 写入，未纳入受控工作流。",
-        "liftCondition": "按对象粒度设计受控导入/导出任务并通过安全评审后另立任务。"
+        "status": "PARTIAL",
+        "taskPath": [
+          "previewRepositoryObjectImport",
+          "applyRepositoryObjectImport",
+          "getRepositoryObjectImportStatus"
+        ],
+        "profiles": [
+          "development",
+          "development-workbench"
+        ],
+        "systemRoles": [
+          "DEV"
+        ],
+        "restrictionReason": "导入方向已受控化并真机验证 PROG 方向（10/10 PASS）；导出方向由 gitExport（包→abapGit ZIP base64，仅 DEV+development-workbench 门控，非本行 taskPath）覆盖；VSP 的文件侧重命名（fileType=rename）仍未纳入且无受控路径；INTF/CLAS 导入方向待环境级激活故障恢复后补验。",
+        "liftCondition": "OO 方向补验通过后晋级 EQUIVALENT；rename 如有需求按对象粒度另立受控任务。"
       },
       "priority": "P2",
       "evidence": [
+        "automation",
+        "real-dev-verified",
         "source-audit"
       ],
-      "nextMilestone": ""
+      "nextMilestone": "OO 方向环境恢复后补验"
     },
     {
       "id": "refactor.rename",

@@ -32,8 +32,8 @@ profile 别名：focused 是 development-workbench 的默认入口别名；矩�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | P0 | 4 | 17 | 0 | 0 | 0 | 0 | 21 |
 | P1 | 4 | 20 | 0 | 0 | 1 | 0 | 25 |
-| P2 | 5 | 14 | 1 | 0 | 5 | 0 | 25 |
-| 合计 | 13 | 51 | 1 | 0 | 6 | 0 | 71 |
+| P2 | 5 | 14 | 3 | 0 | 3 | 0 | 25 |
+| 合计 | 13 | 51 | 3 | 0 | 4 | 0 | 71 |
 
 计入完成率的行（MCP_SUPERSET + EQUIVALENT）：**64/71**；所有数字均为源码审计结论，未经真实 SAP 验证。
 
@@ -169,14 +169,14 @@ profile 别名：focused 是 development-workbench 的默认入口别名；矩�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `install.zadt-vsp` | 向 SAP 端部署 ZADT_VSP WebSocket helper | system type=install_zadt_vsp + focused InstallZADTVSP | INTENTIONAL_RESTRICTION | P2 | （无） | （无） | （无） |
 | `install.abapgit` | 向 SAP 端部署 abapGit（standalone/dev edition） | system type=install_abapgit + focused InstallAbapGit | INTENTIONAL_RESTRICTION | P2 | （无） | （无） | （无） |
-| `install.deploy-zip` | 从 abapGit 格式 ZIP 批量导入对象到包 | system type=deploy_zip + focused DeployZip | INTENTIONAL_RESTRICTION | P2 | （无） | （无） | （无） |
+| `install.deploy-zip` | 从 abapGit 格式 ZIP 批量导入对象到包 | system type=deploy_zip + focused DeployZip | PARTIAL | P2 | `previewRepositoryObjectImport`、`applyRepositoryObjectImport`、`getRepositoryObjectImportStatus` | development, development-workbench | DEV |
 | `install.diagnostics` | 安装依赖清单与安装自检 | system type=list_dependencies\|install_dummy_test + focused ListDependencies/InstallDummyTest；system FEATURES | EQUIVALENT | P2 | `healthcheck`、`featureDetails`、`checkInstallPrerequisites` | development, diagnostic-readonly, legacy-full | DEV, QAS, PRD |
 
 ### fileio
 
 | id | 任务 | VSP surface | 状态 | 优先级 | 本项目任务路径 | profiles | roles |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fileio.import-export` | 本地文件与 SAP 对象的批量导入/导出及文件侧重命名 | SAP(action=system\|edit, params={fileType:deploy_from_file\|save_to_file\|rename}) + focused ImportFromFile/ExportToFile | INTENTIONAL_RESTRICTION | P2 | （无） | （无） | （无） |
+| `fileio.import-export` | 本地文件与 SAP 对象的批量导入/导出及文件侧重命名 | SAP(action=system\|edit, params={fileType:deploy_from_file\|save_to_file\|rename}) + focused ImportFromFile/ExportToFile | PARTIAL | P2 | `previewRepositoryObjectImport`、`applyRepositoryObjectImport`、`getRepositoryObjectImportStatus` | development, development-workbench | DEV |
 
 ### refactor
 
@@ -229,8 +229,4 @@ profile 别名：focused 是 development-workbench 的默认入口别名；矩�
   解除条件：用户在 SAP 端自行完成安装后，本项目仅提供只读前置检查与诊断。
 - **`install.abapgit`**（P2）：本项目不自动在 SAP 端安装/部署对象；abapGit 部署属于有业务副作用的系统变更。
   解除条件：用户在 SAP 端自行完成安装后，本项目仅提供只读前置检查与诊断。
-- **`install.deploy-zip`**（P2）：批量对象导入属于高风险写入，未经受控导入工作流（immutable plan + 原生确认 + readback）评审。
-  解除条件：受控导入工作流设计评审通过后另立任务，禁止一次性开放。
-- **`fileio.import-export`**（P2）：本地文件往返与批量导入导出涉及工作区副作用与批量 SAP 写入，未纳入受控工作流。
-  解除条件：按对象粒度设计受控导入/导出任务并通过安全评审后另立任务。
 

@@ -6,19 +6,19 @@
 
 ## Current release
 
-- Version `0.9.1`, published as `abap-ai-workbench-mcp@0.9.1`. MCP v2 dual-era (native 2026-07-28 + 2025 compatibility).
+- Version `0.9.2`, published as `abap-ai-workbench-mcp@0.9.2`. 0.9.0 = MCP v2 dual-era (native 2026-07-28 + 2025 compatibility); 0.9.1 = capability consolidation batch (62/71); 0.9.2 = `analysis.lint` & `rfc.helper-bridge` promotions (64/71) + the controlled repository import chain.
 - Repository: [`KylinYZ/mcp-abap-adt`](https://github.com/KylinYZ/mcp-abap-adt).
 - The unscoped upstream package is a separate project; always use the scoped name.
 - Role entry points: `focused`/`developer` (150 development tools), `business` (18 read-only tools), `operations` (49 read-only tools), and `expert` (203 compatibility tools). Legacy profile names remain supported; see [`docs/产品定位.md`](docs/产品定位.md).
 - Repository creation catalog: 31 kinds; `REAL_DEV_VERIFIED=28`, `CONTROLLED_IMPLEMENTED=1`, `AUTOMATION_VERIFIED=2`. The checked-in maturity manifest is the authority: [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json).
-- Automation baseline (2026-09-22): 159 Jest suites, 1526 tests.
+- Automation baseline (2026-10-13): 198 Jest suites, 2189 tests.
 
 ## Install
 
 ### npm (recommended)
 
 ```bash
-npx -y abap-ai-workbench-mcp@0.9.1
+npx -y abap-ai-workbench-mcp@0.9.2
 ```
 
 Example MCP configuration:
@@ -28,7 +28,7 @@ Example MCP configuration:
   "mcpServers": {
     "abap-ai-workbench-mcp": {
       "command": "npx",
-      "args": ["-y", "abap-ai-workbench-mcp@0.9.1"],
+      "args": ["-y", "abap-ai-workbench-mcp@0.9.2"],
       "env": { "SAP_MCP_ENV_FILE": "C:\\path\\to\\sap-dev.env" }
     }
   }

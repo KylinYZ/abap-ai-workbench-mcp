@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.kylinyz/abap-ai-workbench-mcp",
   "description": "AI-native ABAP workbench for developers, business consultants, and operations, with an embedded SAP ADT client",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "repository": {
     "url": "https://github.com/KylinYZ/mcp-abap-adt",
     "source": "github"

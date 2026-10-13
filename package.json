@@ -1,6 +1,6 @@
 {
   "name": "abap-ai-workbench-mcp",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "mcpName": "io.github.kylinyz/abap-ai-workbench-mcp",
   "main": "dist/index.js",
   "bin": {
@@ -70,7 +70,8 @@
     "test:git-bridge-real-dev": "node scripts/git-bridge-real-dev-smoke.mjs",
     "test:cluster-impact-real-dev": "node scripts/cluster-impact-real-dev-smoke.mjs",
     "test:report-real-dev": "node scripts/report-real-dev-smoke.mjs",
-    "test:helper-rfc-real-dev": "node scripts/helper-rfc-real-dev-smoke.mjs"
+    "test:helper-rfc-real-dev": "node scripts/helper-rfc-real-dev-smoke.mjs",
+    "test:import-real-dev": "node scripts/repository-import-real-dev-smoke.mjs"
   },
   "keywords": [
     "abap",
