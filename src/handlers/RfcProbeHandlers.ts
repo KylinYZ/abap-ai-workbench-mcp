@@ -119,6 +119,25 @@ export class RfcProbeHandlers {
     } as Record<string, unknown>;
   }
 
+  /**
+   * 探测 RFC_SYSTEM_INFO 指纹（M1 版本能力协商链接线用）：返回值交由
+   * detectBasisReleaseFromSystemInfo 提取 BASIS release。探测失败由调用方
+   * 捕获处理（指纹不可得 = 不裁剪，绝不猜测——见 SapReleaseCapability 语义）。
+   * 超时可调：指纹探测链路用 8 秒短超时（正常毫秒级；防火墙 drop 场景下
+   * tools/list 首呼最坏多等 8 秒，低于常见客户端 30s 协议超时——历史坑位）。
+   */
+  async fetchSystemInfo(timeoutMs: number = RFC_CALL_TIMEOUT_MS): Promise<Record<string, unknown>> {
+    if (!allowlist.isAllowed('RFC_SYSTEM_INFO')) {
+      throw new RfcError('RF_CALL_NOT_ALLOWED', 'FM RFC_SYSTEM_INFO is not on the read-only allowlist.');
+    }
+    const adapter = await this.adapter();
+    const result = await invokeFmCall(adapter, { functionName: 'RFC_SYSTEM_INFO', timeoutMs });
+    return {
+      ...result.values,
+      ...(Object.keys(result.tables).length > 0 ? { tables: result.tables } : {})
+    } as Record<string, unknown>;
+  }
+
   /** 只读工具定义（探测/表读取/接口描述/受控调用四个入口）。 */
   getTools(): RfcProbeToolDefinition[] {
     const readOnly: Pick<RfcProbeToolDefinition, 'annotations' | '_meta'> = {

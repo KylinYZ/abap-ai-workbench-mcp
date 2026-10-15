@@ -304,3 +304,54 @@ describe('RepositoryObjectCreationHandlers', () => {
     expect(capability.inputSchema.properties).not.toHaveProperty('mediaType');
   });
 });
+
+describe('RepositoryObjectCreationHandlers release gating（M2-A：kind × BASIS release 收窄）', () => {
+  function gatedHandlers(basisRelease: number | undefined): RepositoryObjectCreationHandlers {
+    return new RepositoryObjectCreationHandlers(
+      new RepositoryObjectCreationRegistry(INITIAL_REPOSITORY_CREATION_CAPABILITIES),
+      { systemRole: 'DEV', toolProfile: 'development' },
+      undefined, undefined, undefined, undefined,
+      async () => basisRelease
+    );
+  }
+
+  it('751：list 收窄 RAP 时代 kind（BDEF/SRVD/SRVB/CDS_TYPE/CDS_ASPECT 隐藏），CDS_METADATA_EXTENSION 保留', async () => {
+    const result = await gatedHandlers(751).handle('listRepositoryObjectCreationCapabilities', {});
+    const kinds = (result.structuredContent as any).capabilities.map((c: any) => c.objectKind);
+    expect(kinds).toContain('CDS_METADATA_EXTENSION');
+    expect(kinds).not.toContain('BEHAVIOR_DEFINITION');
+    expect(kinds).not.toContain('SERVICE_DEFINITION');
+    expect(kinds).not.toContain('SERVICE_BINDING');
+    expect(kinds).not.toContain('CDS_TYPE');
+    expect(kinds).not.toContain('CDS_ASPECT');
+    expect(kinds).not.toContain('CDS_ENTITY_BUFFER');
+  });
+
+  it('750：CDS_METADATA_EXTENSION 也被收窄（7.50 无 metadata extensions）', async () => {
+    const result = await gatedHandlers(750).handle('listRepositoryObjectCreationCapabilities', {});
+    const kinds = (result.structuredContent as any).capabilities.map((c: any) => c.objectKind);
+    expect(kinds).not.toContain('CDS_METADATA_EXTENSION');
+    expect(kinds).toContain('CDS_DATA_DEFINITION');
+  });
+
+  it('指纹不可得（undefined）：清单零变化（31 类全在）', async () => {
+    const result = await gatedHandlers(undefined).handle('listRepositoryObjectCreationCapabilities', {});
+    const kinds = (result.structuredContent as any).capabilities.map((c: any) => c.objectKind);
+    expect(kinds).toContain('BEHAVIOR_DEFINITION');
+    expect(kinds).toContain('CDS_ENTITY_BUFFER');
+  });
+
+  it('751：describe RAP kind 显式拒绝并带版本原因', async () => {
+    await expect(
+      gatedHandlers(751).handle('describeRepositoryObjectCreation', { objectKind: 'BEHAVIOR_DEFINITION' })
+    ).rejects.toThrow(/requires SAP_BASIS >= 755[\s\S]*BASIS 751/);
+  });
+
+  it('755：BDEF/SRVD 解禁、CDS_ENTITY_BUFFER（757）仍收窄', async () => {
+    const described = await gatedHandlers(755).handle('describeRepositoryObjectCreation', { objectKind: 'BEHAVIOR_DEFINITION' });
+    expect((described.structuredContent as any).capability.objectKind).toBe('BEHAVIOR_DEFINITION');
+    await expect(
+      gatedHandlers(755).handle('describeRepositoryObjectCreation', { objectKind: 'CDS_ENTITY_BUFFER' })
+    ).rejects.toThrow(/requires SAP_BASIS >= 757/);
+  });
+});

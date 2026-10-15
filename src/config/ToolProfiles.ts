@@ -1,6 +1,7 @@
 import type { ToolDefinition } from '../types/tools.js';
 import type { ToolProfile } from '../safe/types.js';
 import { isRawAdvancedMutationTool, isToolAllowedForSystemRole } from './ToolOperationPolicy.js';
+import { filterToolsForBasisRelease } from './SapReleaseCapability.js';
 
 export const READ_ONLY_LEGACY_TOOL_NAMES = new Set([
   'transportInfo', 'hasTransportConfig', 'transportConfigurations', 'getTransportConfiguration',
@@ -219,7 +220,13 @@ export function selectProfileTools(
   activationTools: ToolDefinition[] = [],
   transportCreationTools: ToolDefinition[] = [],
   cdsTools: ToolDefinition[] = [],
-  coverageTools: ToolDefinition[] = []
+  coverageTools: ToolDefinition[] = [],
+  /**
+   * BASIS release 维度裁剪（S/4 低版本适配，M0）：目标系统的 SAP_BASIS release
+   * 数值形态（750 = 7.50）。undefined（指纹未接入）时跳过裁剪，目录与现有版本
+   * 完全一致——releaseGate 与 systemRole 门控并列，语义见 SapReleaseCapability.ts。
+   */
+  basisRelease?: number
 ): ToolDefinition[] {
   let selected: ToolDefinition[];
   if (profile === 'safe') selected = safeTools;
@@ -268,9 +275,13 @@ export function selectProfileTools(
         : OPERATIONS_READONLY_TOOL_NAMES;
     selected = explicitlyNamedTools(profile, completeTools, names);
   }
-  return systemRole === 'DEV'
+  // systemRole 门控（QAS/PRD 只读裁剪）之后并列 releaseGate：低于工具登记的
+  // minBasisRelease 即隐藏；undefined 表示指纹未接入，目录零变化（M0 语义）。
+  const roleFiltered = systemRole === 'DEV'
     ? selected
     : selected.filter(tool => isToolAllowedForSystemRole(tool.name, systemRole));
+  return filterToolsForBasisRelease(roleFiltered.map(tool => tool.name), basisRelease)
+    .map(name => roleFiltered.find(tool => tool.name === name) as ToolDefinition);
 }
 
 function explicitlyNamedTools(profile: ToolProfile, tools: ToolDefinition[], names: Set<string>): ToolDefinition[] {

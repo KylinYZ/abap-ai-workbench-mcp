@@ -19,7 +19,15 @@ export class RepositoryObjectCreationWorkflow {
     private readonly registry: RepositoryObjectCreationRegistry,
     private readonly context: RepositoryCreationContext,
     private readonly plans: RepositoryObjectCreationPlanStore,
-    adapters: RepositoryObjectCreationAdapter[] = []
+    adapters: RepositoryObjectCreationAdapter[] = [],
+    /**
+     * M2-A release 解析器（可选注入）：preview 时解析目标系统 BASIS release
+     * 并用 context 副本走 registry.describe——登记了 minRelease 的 RAP 时代
+     * kind 在低版本被显式拒绝（plan 状态机不进入）。未注入 = 指纹未接入，
+     * context 原样使用（行为零变化）。apply 不重复校验：plan 在 preview 冻结
+     * 时已过门禁，immutable plan 语义以创建当时判定为准。
+     */
+    private readonly releaseResolver?: () => Promise<number | undefined>
   ) {
     for (const adapter of adapters) {
       if (this.adapters.has(adapter.objectKind)) throw new Error(`Duplicate repository creation adapter '${adapter.objectKind}'.`);
@@ -27,9 +35,16 @@ export class RepositoryObjectCreationWorkflow {
     }
   }
 
+  /** M2-A：context 副本合并 release 指纹（未注入 resolver 时原样返回）。 */
+  private async contextWithRelease(): Promise<RepositoryCreationContext> {
+    if (!this.releaseResolver) return this.context;
+    const basisRelease = await this.releaseResolver();
+    return basisRelease === undefined ? this.context : { ...this.context, basisRelease };
+  }
+
   async preview(request: Record<string, unknown>): Promise<Record<string, unknown>> {
     const objectKind = String(request.objectKind || '').trim().toUpperCase() as RepositoryObjectKind;
-    const capability = this.registry.describe(objectKind, this.context);
+    const capability = this.registry.describe(objectKind, await this.contextWithRelease());
     if (!capability.available) {
       throw new SafeAbapError('POLICY_DENIED', 'capability', capability.unavailableReason || 'Repository creation is unavailable.');
     }

@@ -58,6 +58,12 @@ export type RepositoryCreationEvidenceSource =
 export interface RepositoryCreationContext {
   systemHost?: string;
   client?: string;
+  /**
+   * M2-A 目标系统 BASIS release（数值 751 = 7.51）：registry 清单与 preview
+   * 按 REPOSITORY_CREATION_KIND_MIN_RELEASE 收窄 RAP 时代 kind。undefined
+   * （指纹未接入/不可得）= 不收窄，目录与既有版本零变化。
+   */
+  basisRelease?: number;
   sapUser?: string;
   systemRole: string;
   toolProfile: ToolProfile;

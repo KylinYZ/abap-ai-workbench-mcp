@@ -1,6 +1,6 @@
 {
   "name": "abap-ai-workbench-mcp",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "mcpName": "io.github.kylinyz/abap-ai-workbench-mcp",
   "main": "dist/index.js",
   "bin": {

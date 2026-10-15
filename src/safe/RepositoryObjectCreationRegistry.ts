@@ -4,6 +4,7 @@ import {
   validateRepositoryCreationMaturityEvidence,
   type RepositoryCreationMaturityEvidenceManifest
 } from './RepositoryCreationMaturityEvidence.js';
+import { REPOSITORY_CREATION_KIND_MIN_RELEASE, isRepositoryCreationKindAvailableForBasisRelease } from '../config/SapReleaseCapability.js';
 import type {
   RepositoryCreationCapabilityDefinition,
   RepositoryCreationCapabilityView,
@@ -39,13 +40,16 @@ export class RepositoryObjectCreationRegistry {
   }
 
   list(context: RepositoryCreationContext): RepositoryCreationCapabilityView[] {
+    // M2-A 版本收窄：低 BASIS 版本隐藏 RAP 时代 kind（目录少列而非报错）；
+    // undefined = 指纹未接入，清单零变化。
     return [...this.byKind.values()]
       .sort((left, right) => left.objectKind.localeCompare(right.objectKind))
+      .filter(definition => isRepositoryCreationKindAvailableForBasisRelease(definition.objectKind, context?.basisRelease))
       .map(definition => this.toCapability(definition, context));
   }
 
   describe(objectKind: string, context: RepositoryCreationContext): RepositoryCreationDescription {
-    const definition = this.requireByKind(objectKind);
+    const definition = this.requireByKind(objectKind, context?.basisRelease);
     return clone({
       ...this.toCapability(definition, context),
       summary: definition.summary,
@@ -62,7 +66,7 @@ export class RepositoryObjectCreationRegistry {
     return definition ? this.toCapability(definition, context) : undefined;
   }
 
-  private requireByKind(objectKind: string): RepositoryCreationCapabilityDefinition {
+  private requireByKind(objectKind: string, basisRelease?: number): RepositoryCreationCapabilityDefinition {
     const normalized = String(objectKind || '').trim().toUpperCase() as RepositoryObjectKind;
     const definition = this.byKind.get(normalized);
     if (!definition) {
@@ -70,6 +74,16 @@ export class RepositoryObjectCreationRegistry {
         'VALIDATION_FAILED',
         'capability',
         `Repository creation kind '${normalized || '(empty)'}' is not registered.`
+      );
+    }
+    // M2-A 版本门禁：登记了 minRelease 的 kind 在低版本显式拒绝（与 list 隐藏
+    // 双保留）；undefined = 指纹未接入，行为零变化。
+    const minRelease = REPOSITORY_CREATION_KIND_MIN_RELEASE[normalized];
+    if (basisRelease !== undefined && minRelease !== undefined && basisRelease < minRelease) {
+      throw new SafeAbapError(
+        'VALIDATION_FAILED',
+        'capability',
+        `Repository creation kind '${normalized}' requires SAP_BASIS >= ${minRelease} but the target system reports BASIS ${basisRelease}.`
       );
     }
     return definition;

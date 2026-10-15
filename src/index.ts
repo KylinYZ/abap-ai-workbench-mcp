@@ -2,7 +2,7 @@
 
 import { config } from 'dotenv';
 import { randomUUID } from 'crypto';
-// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次；0.9.2：analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套（见 CHANGELOG）。
+// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次；0.9.2：analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套；0.10.0：S/4 低版本适配（BASIS 7.50/7.51 版本能力协商 + RFC 读表 72 字符兼容，见 CHANGELOG）。
 // 低层 Server 保留自管工具目录模式；stdio 传输生命周期由 serveStdio 拥有。
 import { Server, inputRequired } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
@@ -106,6 +106,15 @@ import { configureLogLevel } from './lib/logger.js';
 import { AdtHttpSm21Client } from './sm21/AdtHttpSm21Client.js';
 import { sm21ConfigFromEnvironment } from './sm21/config.js';
 import { selectProfileTools, isReadOnlyLegacyTool } from './config/ToolProfiles.js';
+import {
+  detectBasisReleaseFromSystemInfo,
+  isToolAvailableForBasisRelease,
+  resolveConfiguredBasisRelease,
+  TOOL_MIN_BASIS_RELEASE,
+  unavailableCreationKindsForBasisRelease,
+  unavailableToolsForBasisRelease
+} from './config/SapReleaseCapability.js';
+import { REPOSITORY_OBJECT_KINDS } from './safe/repositoryCreationTypes.js';
 import { assertToolCatalogClassified, toolOperationClass } from './config/ToolOperationPolicy.js';
 import { createCdsAnalysisClient } from './adt/CdsDependencyApi.js';
 import {
@@ -221,6 +230,12 @@ export class AbapAdtServer extends Server {
   private readonly gateSelector: (toolName: string) => ToolExecutionGate | undefined;
   private readonly sessionResilience: SessionResilienceConfig;
   private toolCatalog: ToolDefinition[] = [];
+  /**
+   * M1 版本指纹缓存：懒探测一次并定格（resolved 标记探测已尝试——undefined
+   * 也是有效结论"指纹不可得 = 不裁剪"，避免每次 listTools 重复探测失败）。
+   * 优先级：env SAP_MCP_BASIS_RELEASE 显式配置 > RFC_SYSTEM_INFO 探测。
+   */
+  private basisReleaseProbe?: { value: number | undefined; resolved: boolean };
   private safeAbapHandlers: SafeAbapHandlers;
   private safeDebugHandlers: SafeDebugHandlers;
   private safeAdvancedHandlers: SafeAdvancedHandlers;
@@ -312,7 +327,7 @@ export class AbapAdtServer extends Server {
     super(
       {
         name: "abap-ai-workbench-mcp",
-        version: "0.9.2",
+        version: "0.10.0",
       },
       {
         capabilities: {
@@ -821,7 +836,10 @@ export class AbapAdtServer extends Server {
         new SourceObjectCreationAdapter('CDS_ASPECT', this.adtClient, this.safetyPolicy),
         new SourceObjectCreationAdapter('CDS_ENTITY_BUFFER', this.adtClient, this.safetyPolicy),
         new ServiceBindingCreationAdapter(this.adtClient, this.safetyPolicy)
-      ]
+      ],
+      // M2-A：低 BASIS 版本收窄 RAP 时代 kind（BDEF/SRVD 等，ED1/1610 真机
+      // BDEF=0/SRVD=0 实证）；指纹不可得 = 不收窄，行为零变化。
+      () => this.resolveBasisRelease()
     );
     const repositoryConfirmationSessionId = randomUUID();
     const repositoryConfirmationChallenges = new RepositoryCreationConfirmationChallengeStore();
@@ -893,7 +911,9 @@ export class AbapAdtServer extends Server {
           resultSummary: event.action,
           success: event.challengeStatus !== 'CANCELLED'
         })
-      }
+      },
+      // M2-A：list/describe 的 registry 清单按 release 收窄（RAP 时代 kind 隐藏）。
+      () => this.resolveBasisRelease()
     );
     // 受控对象克隆（crud.clone-object 一站式工作流）：preview 只做源码快照与
     // 声明改名（只读 GET + 本地字符串操作），apply 委托既有受控创建链
@@ -1205,7 +1225,13 @@ export class AbapAdtServer extends Server {
     this.setRequestHandler('tools/list', async () => {
       // ToolDefinition 是本项目自管的 JSON Schema 子集；wire 合法性由
       // v2 era 校验层在运行时把关（0.8.x 起该目录即按 JSON Schema 输出）。
-      return { tools: this.toolCatalog } as unknown as import("@modelcontextprotocol/server").ListToolsResult;
+      // M1 releaseGate 出口裁剪：低 BASIS 版本（如 S/4 1610）隐藏登记了
+      // minBasisRelease 的工具（当前=RAP 面）；指纹不可得/高版本 = 目录零变化。
+      const basisRelease = await this.resolveBasisRelease();
+      const tools = basisRelease === undefined
+        ? this.toolCatalog
+        : this.toolCatalog.filter(tool => isToolAvailableForBasisRelease(tool.name, basisRelease));
+      return { tools } as unknown as import("@modelcontextprotocol/server").ListToolsResult;
     });
 
     this.setRequestHandler('tools/call', async (request, ctx) => {
@@ -1404,6 +1430,15 @@ export class AbapAdtServer extends Server {
         this.safetyPolicy.assertToolOperationAllowed(toolName);
         if (!this.toolCatalog.some(tool => tool.name === toolName)) {
           throw new McpError(ErrorCode.MethodNotFound, `Tool '${toolName}' is unavailable in the ${this.safetyPolicy.toolProfile} tool profile.`);
+        }
+        // M1 releaseGate dispatch 拒绝：与 tools/list 隐藏双保留——客户端缓存
+        // 旧目录直呼被裁剪工具时在入口显式拒绝，并说明版本原因。
+        const dispatchBasisRelease = await this.resolveBasisRelease();
+        if (dispatchBasisRelease !== undefined && !isToolAvailableForBasisRelease(toolName, dispatchBasisRelease)) {
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Tool '${toolName}' requires SAP_BASIS >= ${TOOL_MIN_BASIS_RELEASE[toolName] ?? 700} but the target system reports BASIS ${dispatchBasisRelease}.`
+          );
         }
         if (this.focusedTaskHandlers.supports(toolName)) {
           return this.focusedTaskHandlers.handle(toolName, limitedArguments);
@@ -1829,7 +1864,7 @@ export class AbapAdtServer extends Server {
                 result = await this.revisionHandlers.handle(toolName, limitedArguments);
                 break;
             case 'healthcheck':
-                result = this.healthcheckResult();
+                result = { ...this.healthcheckResult(), sapRelease: await this.sapReleaseReport() };
                 break;
             default:
                 throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${toolName}`);
@@ -1854,7 +1889,69 @@ export class AbapAdtServer extends Server {
       statelessReads: this.sessionResilience.statelessReads,
       // 受控链二次确认模式回显：native=人工确认；auto=部署配置预授权（仅 DEV 可配置）
       confirmationMode: this.safetyPolicy.confirmationMode,
+      // M1 版本能力协商状态回显：configured=env 显式配置（探测被跳过）；
+      // cached=已探测定格；unresolved=尚未探测（下次 tools/list/healthcheck 触发）。
+      // 探测结果不可得（RFC 通道不通等）= releaseGate 关闭、目录零变化。
+      sapRelease: {
+        configured: resolveConfiguredBasisRelease(process.env.SAP_MCP_BASIS_RELEASE) ?? null,
+        probe: this.basisReleaseProbe?.resolved
+          ? (this.basisReleaseProbe.value ?? null)
+          : 'unresolved',
+        source: this.basisReleaseSource(),
+        timestamp: new Date().toISOString()
+      },
       timestamp: new Date().toISOString()
+    };
+  }
+
+  /** 当前生效指纹的来源标注（healthcheck report 用）。 */
+  private basisReleaseSource(): 'configured-env' | 'rfc-probe' | 'unresolved' | 'unavailable' {
+    if (resolveConfiguredBasisRelease(process.env.SAP_MCP_BASIS_RELEASE) !== undefined) return 'configured-env';
+    if (!this.basisReleaseProbe?.resolved) return 'unresolved';
+    return this.basisReleaseProbe.value !== undefined ? 'rfc-probe' : 'unavailable';
+  }
+
+  /**
+   * M1 指纹解析（懒探测 + 缓存）：env SAP_MCP_BASIS_RELEASE 显式配置优先
+   * （部署者声明即对目标系统负责，探测跳过）；否则 RFC_SYSTEM_INFO 探测一次
+   * （RFCSAPRL = BASIS release，ED1/7.51 真机证实）。探测失败缓存为 undefined
+   * 且只记日志不抛错——指纹不可得时 releaseGate 关闭，目录与 dispatch 行为
+   * 与既有版本完全一致（fail-closed：不得猜测裁剪）。
+   */
+  private async resolveBasisRelease(): Promise<number | undefined> {
+    const configured = resolveConfiguredBasisRelease(process.env.SAP_MCP_BASIS_RELEASE);
+    if (configured !== undefined) return configured;
+    if (this.basisReleaseProbe?.resolved) return this.basisReleaseProbe.value;
+    this.basisReleaseProbe = { value: undefined, resolved: true };
+    try {
+      // 8 秒专用短超时：RFC_SYSTEM_INFO 极轻（ED1 实测毫秒级），8s 只兜防火墙
+      // drop 的挂死场景，确保 tools/list 首呼不会被探测拖过客户端协议超时。
+      const systemInfo = await this.rfcProbeHandlers.fetchSystemInfo(8_000);
+      this.basisReleaseProbe.value = detectBasisReleaseFromSystemInfo(systemInfo);
+    } catch (error) {
+      console.error(
+        '[SapRelease] RFC fingerprint probe failed; release gating disabled:',
+        error instanceof Error ? error.message : error
+      );
+    }
+    return this.basisReleaseProbe.value;
+  }
+
+  /**
+   * healthcheck 的 release capability report：生效指纹 + 来源 + 被裁剪工具清单
+   * （unavailableTools 按 minBasisRelease 排序输出，可 diff）。unresolved 时
+   * 触发一次探测（healthcheck 本就是诊断入口，探测耗时 30s 上限可接受）。
+   */
+  private async sapReleaseReport(): Promise<Record<string, unknown>> {
+    const basisRelease = await this.resolveBasisRelease();
+    const catalogNames = this.toolCatalog.map(tool => tool.name);
+    return {
+      basisRelease: basisRelease ?? null,
+      source: this.basisReleaseSource(),
+      unavailableTools: unavailableToolsForBasisRelease(catalogNames, basisRelease),
+      gatedToolCount: basisRelease === undefined ? 0 : unavailableToolsForBasisRelease(catalogNames, basisRelease).length,
+      // M2-A：受控创建 31 类中按版本收窄的 kind（RAP 时代等），清单可 diff
+      unavailableCreationKinds: unavailableCreationKindsForBasisRelease(REPOSITORY_OBJECT_KINDS, basisRelease)
     };
   }
 

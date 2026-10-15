@@ -23,6 +23,7 @@
  */
 
 import { RfcError } from './errors';
+import { splitWhereToOptions } from '../config/SapReleaseCapability';
 
 /** WHERE 子句单行最大长度：RFC_READ_TABLE 的 OPTIONS-TEXT 字段宽 72 字符。 */
 export const WHERE_LINE_MAX_LENGTH = 72;
@@ -68,8 +69,11 @@ export function validateToken(value: unknown, capability: string, label: string,
  * WHERE 子句的安全化处理（OPTIONS TEXT 是动态 Open SQL WHERE 片段）：
  * - 拒绝换行/控制字符（阻断 OPTIONS 行逃逸——RFM 内部按行拼 SELECT WHERE）；
  * - 拒绝分号（阻断语句边界混淆）；
- * - 长度上限 72 字符（OPTIONS-TEXT 字段宽；VSP splitWhereClause 同宽度口径，
- *   其超宽按空格切多行的行为不移植——本工具保持单行限制，超限即拒）。
+ * - 长度处理（M1 低版本兼容，2026-10-15 ED1/7.51 真机取证后调整）：经典
+ *   RFC_READ_TABLE 的 OPTIONS 行宽 72（RFC_DB_OPT），原先"超限即拒"在低版本
+ *   会让普通 IN 查询（如 6 组件清单）必然失败——现改为不在此处拒绝长度，
+ *   由 buildReadTablePayload 经 splitWhereToOptions（引号感知、按空格边界）
+ *   切成多行 TEXT；唯一剩余拒绝路径是引号外单 token 超宽（无法安全断行）。
  * - 单引号按原样透传、不翻倍：OPTIONS 文本由 RFM 内部作为 Open SQL 片段执行，
  *   字面量引号必须保持调用方写法（`BUKRS = '1000'`）；翻倍会触发 ABAP 侧
  *   DB_Error（真机实测）。注入面评估：WHERE 只影响调用方点名的单张只读表的
@@ -79,12 +83,6 @@ export function validateToken(value: unknown, capability: string, label: string,
 export function sanitizeWhereClause(value: unknown, capability: string): string {
   const raw = String(value ?? '').trim()
   if (raw === '') return ''
-  if (raw.length > WHERE_LINE_MAX_LENGTH) {
-    throw new RfcError(
-      'RFC_INVALID_PAYLOAD',
-      `${capability}: whereClause exceeds ${WHERE_LINE_MAX_LENGTH} characters.`
-    )
-  }
   if (/[\r\n\x00-\x08\x0b\x0c\x0e-\x1f;]/.test(raw)) {
     throw new RfcError(
       'RFC_INVALID_PAYLOAD',
@@ -108,7 +106,9 @@ export function buildReadTablePayload(input: ReadRfcTableInput, capability: stri
 
   const whereClause = sanitizeWhereClause(input?.whereClause, capability)
   if (whereClause !== '') {
-    payload.OPTIONS = [{ TEXT: whereClause }]
+    // M1 低版本兼容：长 WHERE 按引号感知的空格边界切多行 OPTIONS TEXT
+    // （RFM 内部拼接为单个 WHERE，行序即原语义）；短句产出单行，行为不变。
+    payload.OPTIONS = splitWhereToOptions(whereClause, WHERE_LINE_MAX_LENGTH).map(text => ({ TEXT: text }))
   }
 
   const fields = (input?.fields ?? [])

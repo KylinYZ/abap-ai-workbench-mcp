@@ -50,7 +50,13 @@ export class RepositoryObjectCreationHandlers {
     private readonly workflow?: RepositoryCreationWorkflowPort,
     confirmationOptions?: RepositoryCreationConfirmationOptions,
     private readonly cleanupWorkflow?: RepositoryCleanupWorkflowPort,
-    cleanupConfirmationOptions?: RepositoryCleanupConfirmationOptions
+    cleanupConfirmationOptions?: RepositoryCleanupConfirmationOptions,
+    /**
+     * M2-A release 解析器（可选注入）：list/describe 前解析目标系统 BASIS
+     * release 并合并进 context 副本，registry 据此收窄 RAP 时代 kind。
+     * 未注入 = 指纹未接入，context 原样使用（行为零变化）。
+     */
+    private readonly releaseResolver?: () => Promise<number | undefined>
   ) {
     if (workflow && confirmationOptions) {
       this.confirmation = new RepositoryObjectCreationConfirmation(workflow, confirmationOptions);
@@ -132,11 +138,11 @@ export class RepositoryObjectCreationHandlers {
   ): Promise<Record<string, unknown>> {
     switch (toolName) {
       case 'listRepositoryObjectCreationCapabilities':
-        return render({ status: 'success', capabilities: this.registry.list(this.context) });
+        return render({ status: 'success', capabilities: this.registry.list(await this.contextWithRelease()) });
       case 'describeRepositoryObjectCreation':
         return render({
           status: 'success',
-          capability: this.registry.describe(String(args.objectKind || ''), this.context)
+          capability: this.registry.describe(String(args.objectKind || ''), await this.contextWithRelease())
         });
       case 'previewRepositoryObjectCreation':
         return render(await this.requireWorkflow().preview(args));
@@ -166,6 +172,13 @@ export class RepositoryObjectCreationHandlers {
   private requireCleanupWorkflow(): RepositoryCleanupWorkflowPort {
     if (!this.cleanupWorkflow) throw new SafeConfigurationError();
     return this.cleanupWorkflow;
+  }
+
+  /** M2-A：context 副本合并 release 指纹（未注入 resolver 时原样返回）。 */
+  private async contextWithRelease(): Promise<RepositoryCreationContext> {
+    if (!this.releaseResolver) return this.context;
+    const basisRelease = await this.releaseResolver();
+    return basisRelease === undefined ? this.context : { ...this.context, basisRelease };
   }
 }
 
