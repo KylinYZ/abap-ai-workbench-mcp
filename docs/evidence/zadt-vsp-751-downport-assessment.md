@@ -18,7 +18,7 @@ POSIX 兼容模式：`\s`、`\d`、`[^"]`、字符交替，无需改写正则文
 APC 全套 API（`CL_APC_WSP_EXT_STATEFUL_BASE` 基类 + `IF_APC_WSP_EXTENSION` 接口 +
 `IF_APC_WSP_MESSAGE_MANAGER`）、`CL_ABAP_DOCU=>CONVERT_ITF_TO_HTML`、`string_table`。
 
-## 2. `FIND PCRE` 全量分布（21 处，7.51 编译必失败点）
+## 2. `FIND PCRE` 全量分布（20 处，7.51 编译必失败点）
 
 | 类 | 处数 | 行号（sap-demo 版源码） |
 |---|---|---|
@@ -28,7 +28,17 @@ APC 全套 API（`CL_APC_WSP_EXT_STATEFUL_BASE` 基类 + `IF_APC_WSP_EXTENSION` 
 | ZCL_VSP_DEBUG_SERVICE | 2 | 1006, 1013 |
 | ZCL_VSP_AMDP_SERVICE | 2 | 849, 853 |
 | ZCL_VSP_REPORT_SERVICE | 4 | 118, 362, 397, 484 |
-| ZCL_VSP_GIT_SERVICE | 6 | 197, 200, 213, 217, 220（gitTypes/gitExport 参数解析） |
+| ZCL_VSP_GIT_SERVICE | 5 | 197, 200, 213, 217, 220（gitTypes/gitExport 参数解析） |
+
+> **downport 已执行（2026-10-16）**：在 sap-demo（S4D 300/816）上对 7 类原位改写
+> 20 处 `PCRE` → `REGEX` 并全部激活（每处激活均回报 POSIX deprecated 警告
+> forceSupported=true = 高版本合法可运行、低版本兼容的形态）；改写后全库 PCRE
+> 零命中。冒烟回归：`gitTypes` 返回 166 类型（APC handler 的 parse_message 改写处
+> 每条消息实测）+ 带参 RFC 调用 subrc=0（RFC_SERVICE extract_param 改写处实测）。
+> **改写后源码已落仓交付**：`docs/evidence/sap-dev-backups/751/`（9 文件 4197 行：
+> 7 CLAS + ZIF_VSP_SERVICE 接口 + 新发现的依赖 ZADT_CL_TADIR_MOVE）。
+> 已知非回归问题：sap-demo 上 gitExport 对 `$` 本地包报 "No objects found"（TADIR
+> 查询与本地包的既有组合行为，PCRE 时代相同），不影响交付物。
 
 > 检测方式：grepObjects 对 7 类统一正则扫描 + APC_HANDLER/UTILS 全文审阅 +
 > git_service 仓库备份（`docs/evidence/sap-dev-backups/*.abap`）复核。
