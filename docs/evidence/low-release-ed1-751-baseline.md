@@ -127,3 +127,42 @@ edition + inactive zcl_abapgit_* 类）被当作 ED1 就绪状态并据此准备
 3. ED1 1610 SP2 的**版本定性**仍可信（收集报告含机器级指纹 RFCSYSID=ED1、
    RFCHOST=ERPDEV1、RFCSAPRL=751、S4CORE=101），但**部署状态与连接可达性**
    以恢复连接后的重新探测为准。
+
+## 8. M1/M2 端到端真机验收完成（0.10.0 外部用户回传，2026-10-16）
+
+**背景**：低版本系统（ED1）为外部用户环境，交付形态 = npm 发布（0.10.0 已发布）+
+交接说明（`docs/prompts/低版本用户-0.10.0测试与收集交接.md`）→ 用户侧 ZCode 执行 →
+回传报告（全文：`docs/prompts/低版本用户-0.10.0测试报告-ED1-20261016.md`）。
+
+**验收结果：三项低版本能力全部真机通过**——
+
+| 能力 | 真机证据（ED1 751） |
+|---|---|
+| M1 指纹链 | `basisRelease=751, source=rfc-probe`（懒探测一次生效；RFC_SYSTEM_INFO 通道两轮稳定） |
+| M1 工具门控（双保留） | 目录 175 可见、11 个 RAP 工具全部隐藏（agent 无调用通道 = 隐藏层生效直接证据）；等价门控 describe(BDEF) 报错原文与设计格式逐字一致 |
+| M2-A 创建 kind 收窄 | 清单 25 类（31-6）；RAP 6 类缺席、CDS_METADATA_EXTENSION 在位（751 预期保留） |
+| M1 72 字符切行 | 85 字符长 IN 查询成功返回 5 行（0.9.2 必报错的真实失败点转正常） |
+| 常规回归 | inspectSapSystem/searchObject/tableContents 全部正常 |
+
+**开发者核对结论（对用户 NOTES 的回应）**：
+1. **门控清单口径差（用户 NOTES-1）→ 非缺陷，口径已显式化**：`gatedToolCount=9` 基于
+   当前 profile 目录（development-workbench 本就不含 `rapGenGenerate`/
+   `rapGenPublishService` 这两个 raw-advanced 工具——它们属 legacy-full/development
+   的 raw 面）；这 2 个工具的 dispatch 拒绝仍由 TOOL_MIN_BASIS_RELEASE 独立生效。
+   已加 `sapRelease.scope='current-profile-catalog'` 字段显式声明口径。
+2. **T3 严格验证的说明**：rapGenPreview 直发 tools/call 需 MCP Inspector（agent 框架
+   按 tools/list 注册工具，隐藏后确实无调用通道——这正是隐藏层生效的证明）；
+   dispatch 拒绝路径已有仓库单测覆盖，Inspector 自验可选。
+3. **C3 AMDP 重大发现**：`checkAmdpDebugger` 报 available（HTTP 400 mainId required =
+   资源路由存在）——7.51 上 AMDP 调试资源面存在，与特性矩阵"7.53+"口径冲突。
+   按"资源面存在 ≠ 调试工作流实测"保守维持 kind 门控 753 不变（误放行的代价高于
+   过度保守），待真机调试会话实测后再评估下调；已在代码注释与矩阵留档。
+4. **tableContents rowNumber=5 返回 6 行（用户 NOTES-2）**：datapreview 预览通道
+   行数边界嫌疑，只读无影响，记入 backlog。
+5. **C4 部署起点**：用户系统 ZADT_VSP helper 与 abapGit 均**未安装**（git 导出面
+   不可用）——M3 在该系统的推进需要完整部署链（受控导入 + SAPC/SICF 人工步），
+   待所有者决策。
+
+**里程碑**：规划（2026-10-07）中的 M0/M1/M2-A 全部完成并通过外部真机端到端验收；
+剩余真机项 = M3（WebSocket 桥部署+验证，起点为零）+ M4 尾项（AMDP 工作流实测、
+SICF apc 节点人工确认）→ M5。

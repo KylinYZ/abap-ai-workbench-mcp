@@ -1948,6 +1948,12 @@ export class AbapAdtServer extends Server {
     return {
       basisRelease: basisRelease ?? null,
       source: this.basisReleaseSource(),
+      // 口径声明（0.10.0 ED1 实测口径差反馈）：unavailableTools/unavailableCreationKinds
+      // 基于**当前 profile 目录**（this.toolCatalog 已按 profile 选定）计算——不在当前
+      // profile 的登记工具（如 rapGenGenerate/rapGenPublishService 属 legacy-full/
+      // development 的 raw 面）不会进清单，但其 dispatch 拒绝仍由 TOOL_MIN_BASIS_RELEASE
+      // 独立生效，不受目录口径影响。
+      scope: 'current-profile-catalog',
       unavailableTools: unavailableToolsForBasisRelease(catalogNames, basisRelease),
       gatedToolCount: basisRelease === undefined ? 0 : unavailableToolsForBasisRelease(catalogNames, basisRelease).length,
       // M2-A：受控创建 31 类中按版本收窄的 kind（RAP 时代等），清单可 diff

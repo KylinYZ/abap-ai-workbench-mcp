@@ -15,7 +15,10 @@
  * - RAP（BDEF/SRVD 对象类型、RAP 生成器）7.55 起 GA → 全部 RAP 面登记 755；
  *   7.50/7.51/7.52 上这些对象类型不存在（收集清单 SECTION4 真机互证）。
  * - ADT AMDP 调试资源 7.53 起 → 仅登记 kind 级（AMDP_*），工具级不动（调试链同时
- *   承载普通 ABAP 调试，不能整体隐藏）。
+ *   承载普通 ABAP 调试，不能整体隐藏）。**7.51 真机补记（ED1 1610 SP2，2026-10-16
+ *   外部用户回传）**：checkAmdpDebugger 报 available（HTTP 400 mainId required =
+ *   资源路由存在）——与特性矩阵 7.53 口径冲突；按"资源面存在 ≠ 调试工作流实测"
+ *   保守维持 753，待真机调试会话实测通过后再评估下调（一个数据来源纪律）。
  * - CDS 主面（Define View）7.40 SP05+ → 7.50/7.51 可用，不登记。
  * - CDS Metadata Extensions 仅 7.50 缺（7.51 起 available）→ 走受控创建 kind 级收窄（M2），不在工具级登记。
  */
