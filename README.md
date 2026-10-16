@@ -2,25 +2,24 @@
 
 # ABAP AI Workbench MCP
 
-`abap-ai-workbench-mcp` is an AI-native ABAP workbench for SAP teams. Developers are the primary users, followed by business consultants and operations. The default `focused` entry point follows the Focused/Expert model used by `vibing-steampunk`: expose the practical daily surface first, and keep the complete low-level ADT surface for explicit expert use. It embeds the ADT client under `src/adt/`, so the runtime does not depend on the external `abap-adt-api` package.
+`abap-ai-workbench-mcp` is an AI-native ABAP workbench for SAP teams: developers first, then business consultants and operations. The default `focused` entry exposes the practical daily surface first; the complete low-level ADT surface stays available through `expert`. The ADT client is embedded under `src/adt/`, so the runtime does not depend on the external `abap-adt-api` package.
 
-> **Provenance**: this repository is a secondary-development (fork-based) version of [`mario-andreschak/mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api). This repo is the ongoing maintenance and improvement version going forward; the original upstream author remains credited under the MIT license (see [`LICENSE`](LICENSE)), and the upstream remote is kept for reference.
+> **Provenance**: this repository is a secondary-development (fork-based) version of [`mario-andreschak/mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api) and serves as the ongoing maintenance and improvement version. The upstream author remains credited under the MIT license (see [`LICENSE`](LICENSE)); the upstream remote is kept for reference.
 
 ## Current release
 
-- Version `0.9.2`, published as `abap-ai-workbench-mcp@0.9.2`. 0.9.0 = MCP v2 dual-era (native 2026-07-28 + 2025 compatibility); 0.9.1 = capability consolidation batch (62/71); 0.9.2 = `analysis.lint` & `rfc.helper-bridge` promotions (64/71) + the controlled repository import chain.
-- Repository: [`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp) (the maintenance repo; the previous repo `KylinYZ/mcp-abap-adt` is no longer updated).
-- The unscoped upstream package is a separate project; always use the scoped name.
-- Role entry points: `focused`/`developer` (150 development tools), `business` (18 read-only tools), `operations` (49 read-only tools), and `expert` (203 compatibility tools). Legacy profile names remain supported; see [`docs/产品定位.md`](docs/产品定位.md).
-- Repository creation catalog: 31 kinds; `REAL_DEV_VERIFIED=28`, `CONTROLLED_IMPLEMENTED=1`, `AUTOMATION_VERIFIED=2`. The checked-in maturity manifest is the authority: [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json).
-- Automation baseline (2026-10-13): 198 Jest suites, 2189 tests.
+- Version `0.10.0`, published as `abap-ai-workbench-mcp@0.10.0` — S/4HANA low-release adaptation (BASIS 7.50/7.51): release-capability negotiation with per-tool gating, 72-character RFC read-table compatibility, and controlled-creation kind trimming. Full history: [`CHANGELOG.md`](CHANGELOG.md).
+- Repository: [`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp) — the maintenance repo; the previous repo `KylinYZ/mcp-abap-adt` is no longer updated.
+- Role entry points: `focused`/`developer` (185 tools), `business` (18), `operations` (58), `expert` (220). Older profiles (`safe`, `development`, `diagnostic-readonly`, `legacy-full`) remain supported; see [`docs/产品定位.md`](docs/产品定位.md).
+- Repository creation catalog: 31 kinds — `REAL_DEV_VERIFIED=28`, `CONTROLLED_IMPLEMENTED=1`, `AUTOMATION_VERIFIED=2`. The checked-in manifest is the authority: [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json).
+- Automation baseline (2026-10-16): 199 Jest suites, 2244 tests.
 
 ## Install
 
 ### npm (recommended)
 
 ```bash
-npx -y abap-ai-workbench-mcp@0.9.2
+npx -y abap-ai-workbench-mcp@0.10.0
 ```
 
 Example MCP configuration:
@@ -30,7 +29,7 @@ Example MCP configuration:
   "mcpServers": {
     "abap-ai-workbench-mcp": {
       "command": "npx",
-      "args": ["-y", "abap-ai-workbench-mcp@0.9.2"],
+      "args": ["-y", "abap-ai-workbench-mcp@0.10.0"],
       "env": { "SAP_MCP_ENV_FILE": "C:\\path\\to\\sap-dev.env" }
     }
   }
@@ -39,8 +38,7 @@ Example MCP configuration:
 
 ### Source
 
-Requires Node.js 22.14+ (Node 18/20 are EOL and unsupported from 0.7.0; on
-Windows switch via nvm-windows using the repo `.nvmrc`).
+Requires Node.js 22.14+ (Node 18/20 are EOL and unsupported since 0.7.0; on Windows switch via nvm-windows using the repo `.nvmrc`).
 
 ```bash
 npm install
@@ -50,33 +48,21 @@ node dist/index.js
 
 Use an absolute `dist/index.js` path in an MCP client when testing unpublished changes. Keep credentials outside the repository; `.env.example` lists supported fields.
 
-## Profiles
+## Roles and safety
 
-`focused` and `developer` are aliases for the developer workbench (`development-workbench`). `business`, `operations`, and `expert` are aliases for the business-readonly, operations-readonly, and legacy-full surfaces. The older profile names remain supported for compatibility; `safe` is still available when a minimal guarded surface is required.
-
-QAS, PRD, missing, and unknown system roles remain local/read-only regardless of profile. Raw mutation tools never bypass these role gates.
-
-## Quick start
-
-With the default `focused` entry point, call `sapDoctor` first, then `sap` with `action=help`. Use `action=read` for source, `action=search` for object discovery, `action=diagnose` for system/runtime triage, and `action=edit` to create a guarded source preview. `sapDoctor` is read-only; edits still use the existing server plan and confirmation workflow.
-
-## Guarded workflows
+`focused`/`developer` is the developer workbench; `business`, `operations`, and `expert` are the read-only business, read-only operations, and full compatibility surfaces. QAS, PRD, missing, and unknown system roles stay local/read-only regardless of profile.
 
 All remote mutations use a server-generated preview plan, one native confirmation, and a single apply. Caller-supplied confirmation flags, URLs, XML/JSON payloads, media types, and lock handles are not accepted. An uncertain remote result is terminal: inspect SAP state and create a new plan; never replay the old plan.
 
-For source changes:
+## Quick start
 
-1. Read the complete source with `inspectAbapObject`.
-2. Preview with `previewAbapChange` and an existing unreleased transport.
-3. Review the returned diff.
-4. Apply only the returned `changePlanId`.
-5. Check `getAbapChangeStatus` for syntax, activation, hash, and unlock results.
+Call `sapDoctor` first, then `sap` with `action=help`. Use `action=read` for source, `action=search` for object discovery, `action=diagnose` for system/runtime triage, and `action=edit`/`action=create` for guarded previews.
 
-For repository objects, use the five `list/describe/preview/apply/status` tools. Cleanup is a separate destructive workflow and is only exposed during explicitly scoped DEV validation. Current per-kind evidence and blocked identities are listed under [`docs/evidence/`](docs/evidence/).
+Source changes: `inspectAbapObject` → `previewAbapChange` (with an existing unreleased transport) → review the returned diff → `applyAbapChange` with only the returned `changePlanId` → `getAbapChangeStatus` for syntax, activation, hash, and unlock results. Repository objects use the five `list/describe/preview/apply/status` tools; cleanup is a separate destructive workflow, only exposed in explicitly scoped DEV validation (per-kind evidence under [`docs/evidence/`](docs/evidence/)).
 
-## Configuration and limits
+## Configuration
 
-Copy `.env.example` to a private environment file and set at least `SAP_URL`, `SAP_USER`, `SAP_PASSWORD`, `SAP_CLIENT`, `SAP_MCP_TOOL_PROFILE`, and `SAP_MCP_SYSTEM_ROLE`. Keep `SAP_MCP_MAX_CONCURRENT_TOOLS=1` unless a separately verified deployment requires another value. Query, search, argument, response, source-cache, plan, and audit limits are validated at startup.
+Copy `.env.example` to a private environment file and set at least `SAP_URL`, `SAP_USER`, `SAP_PASSWORD`, `SAP_CLIENT`, `SAP_MCP_TOOL_PROFILE`, and `SAP_MCP_SYSTEM_ROLE`. On older S/4HANA releases (BASIS 7.50/7.51) the server negotiates capabilities automatically; set `SAP_MCP_BASIS_RELEASE` only if the probe fails. Keep `SAP_MCP_MAX_CONCURRENT_TOOLS=1` unless a separately verified deployment requires another value.
 
 ## Documentation map
 

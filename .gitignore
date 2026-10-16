@@ -10,3 +10,8 @@ package-lock.json
 .tmp-audit-final/
 .zcodeignore
 .zcode/
+
+# 私有 SAP 环境文件（含内网地址/账号，一律不入库；.env.example 为唯一仓库内模板）
+sap_dev.env*
+*.env
+!*.env.example

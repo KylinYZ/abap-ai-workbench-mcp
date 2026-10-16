@@ -1,6 +1,6 @@
-# 迁移到 npm `0.6.0`
+# 迁移到 npm `0.10.0`
 
-本文只替换 MCP 的启动来源，不改变 SAP 连接、Profile、System Role 或安全白名单。目标包固定为 `abap-ai-workbench-mcp@0.8.4`。
+本文只替换 MCP 的启动来源，不改变 SAP 连接、Profile、System Role 或安全白名单。目标包固定为 `abap-ai-workbench-mcp@0.10.0`。
 
 ## 迁移原则
 
@@ -22,7 +22,7 @@ Codex TOML：
 enabled = true
 startup_timeout_sec = 120
 command = 'C:\Program Files\nodejs\npx.cmd'
-args = ['-y', 'abap-ai-workbench-mcp@0.8.4']
+args = ['-y', 'abap-ai-workbench-mcp@0.10.0']
 
 [mcp_servers.sap-dev.env]
 SAP_MCP_ENV_FILE = 'D:\sap-mcp-config\sap-dev.env'
@@ -35,7 +35,7 @@ JSON/JSONC：
   "mcpServers": {
     "sap-dev": {
       "command": "npx",
-      "args": ["-y", "abap-ai-workbench-mcp@0.8.4"],
+      "args": ["-y", "abap-ai-workbench-mcp@0.10.0"],
       "env": { "SAP_MCP_ENV_FILE": "D:\\sap-mcp-config\\sap-dev.env" }
     }
   }
@@ -57,25 +57,25 @@ where.exe npx
 需要访问 npm 时验证目标包：
 
 ```powershell
-npm view abap-ai-workbench-mcp@0.8.4 version
-npm view abap-ai-workbench-mcp@0.8.4 bin
+npm view abap-ai-workbench-mcp@0.10.0 version
+npm view abap-ai-workbench-mcp@0.10.0 bin
 ```
 
-预期版本为 `0.8.1`，bin 为 `abap-ai-workbench-mcp`。若解析失败，停止并保留旧配置。
+预期版本为 `0.10.0`，bin 为 `abap-ai-workbench-mcp`。若解析失败，停止并保留旧配置。
 
 修改后完整退出并重启 MCP 客户端，然后按顺序确认：进程启动、工具列表加载、Profile 工具数、`healthcheck` 身份（如可用）和一次最小只读调用。
 
-当前工具数基线：
+当前工具数基线（0.10.0，与 `ToolCatalogIntegrity.test.ts` 对齐）：
 
 | Profile | 工具数 |
 | --- | ---: |
 | `safe` | 7 |
-| `development` | 127 |
-| `diagnostic-readonly` | 99 |
-| `legacy-full` | 161 |
-| `development-workbench` | 87 |
-| `business-readonly` | 17 |
-| `operations-readonly` | 40 |
+| `development` | 208 |
+| `diagnostic-readonly` | 150 |
+| `legacy-full` | 220 |
+| `development-workbench` | 185 |
+| `business-readonly` | 18 |
+| `operations-readonly` | 58 |
 
 ## 回退与清理
 
