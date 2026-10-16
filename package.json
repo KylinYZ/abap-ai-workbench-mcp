@@ -93,11 +93,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KylinYZ/mcp-abap-adt.git"
+    "url": "git+https://github.com/KylinYZ/abap-ai-workbench-mcp.git"
   },
-  "homepage": "https://github.com/KylinYZ/mcp-abap-adt#readme",
+  "homepage": "https://github.com/KylinYZ/abap-ai-workbench-mcp#readme",
   "bugs": {
-    "url": "https://github.com/KylinYZ/mcp-abap-adt/issues"
+    "url": "https://github.com/KylinYZ/abap-ai-workbench-mcp/issues"
   },
   "engines": {
     "node": ">=22.14.0"

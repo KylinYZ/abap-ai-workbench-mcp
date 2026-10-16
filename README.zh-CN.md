@@ -4,10 +4,12 @@
 
 `abap-ai-workbench-mcp` 是面向 SAP 团队的 AI 原生 ABAP 工作台：开发人员优先，业务顾问其次，运维人员兜底。默认 `focused` 入口借鉴 `vibing-steampunk` 的 Focused/Expert 思路，先展示能完成日常工作的开发能力；需要完整低层 ADT 面时再显式使用 `expert`。完整 ADT 客户端内置在 `src/adt/`，运行时不依赖外部 `abap-adt-api` 包。
 
+> **项目来源**：本项目是基于 [`mario-andreschak/mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api) 的二次开发版本，本仓库为后续维护与完善的唯一主仓库；遵循 MIT 许可证并保留对原作者的署名（见 [`LICENSE`](LICENSE)），上游仓库以 upstream remote 保留备查。
+
 ## 当前版本
 
 - 版本 `0.9.2`，npm 包为 `abap-ai-workbench-mcp@0.9.2`（0.9.0 = MCP v2 双栈：原生 2026-07-28 + 2025 兼容；0.9.1 = 能力收编批次 62/71；0.9.2 = analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套，详见 CHANGELOG）。
-- 代码仓库：[`KylinYZ/mcp-abap-adt`](https://github.com/KylinYZ/mcp-abap-adt)。
+- 代码仓库：[`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp)（维护主仓库；原仓库 `KylinYZ/mcp-abap-adt` 不再更新）。
 - 始终使用带作用域的包名；不带作用域的包属于上游独立项目。
 - 角色入口：`focused` / `developer`（150 个开发工具）、`business`（18 个只读工具）、`operations`（49 个只读工具）、`expert`（203 个兼容工具）。旧 profile 名称继续支持，完整目录见[产品定位](docs/产品定位.md)。
 - 仓库对象创建目录固定 31 类：`REAL_DEV_VERIFIED=28`、`CONTROLLED_IMPLEMENTED=1`、`AUTOMATION_VERIFIED=2`。权威成熟度文件为 [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json)。

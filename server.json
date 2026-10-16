@@ -4,7 +4,7 @@
   "description": "AI-native ABAP workbench for developers, business consultants, and operations, with an embedded SAP ADT client",
   "version": "0.9.2",
   "repository": {
-    "url": "https://github.com/KylinYZ/mcp-abap-adt",
+    "url": "https://github.com/KylinYZ/abap-ai-workbench-mcp",
     "source": "github"
   },
   "packages": [

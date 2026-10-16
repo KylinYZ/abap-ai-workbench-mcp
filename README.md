@@ -4,10 +4,12 @@
 
 `abap-ai-workbench-mcp` is an AI-native ABAP workbench for SAP teams. Developers are the primary users, followed by business consultants and operations. The default `focused` entry point follows the Focused/Expert model used by `vibing-steampunk`: expose the practical daily surface first, and keep the complete low-level ADT surface for explicit expert use. It embeds the ADT client under `src/adt/`, so the runtime does not depend on the external `abap-adt-api` package.
 
+> **Provenance**: this repository is a secondary-development (fork-based) version of [`mario-andreschak/mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api). This repo is the ongoing maintenance and improvement version going forward; the original upstream author remains credited under the MIT license (see [`LICENSE`](LICENSE)), and the upstream remote is kept for reference.
+
 ## Current release
 
 - Version `0.9.2`, published as `abap-ai-workbench-mcp@0.9.2`. 0.9.0 = MCP v2 dual-era (native 2026-07-28 + 2025 compatibility); 0.9.1 = capability consolidation batch (62/71); 0.9.2 = `analysis.lint` & `rfc.helper-bridge` promotions (64/71) + the controlled repository import chain.
-- Repository: [`KylinYZ/mcp-abap-adt`](https://github.com/KylinYZ/mcp-abap-adt).
+- Repository: [`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp) (the maintenance repo; the previous repo `KylinYZ/mcp-abap-adt` is no longer updated).
 - The unscoped upstream package is a separate project; always use the scoped name.
 - Role entry points: `focused`/`developer` (150 development tools), `business` (18 read-only tools), `operations` (49 read-only tools), and `expert` (203 compatibility tools). Legacy profile names remain supported; see [`docs/产品定位.md`](docs/产品定位.md).
 - Repository creation catalog: 31 kinds; `REAL_DEV_VERIFIED=28`, `CONTROLLED_IMPLEMENTED=1`, `AUTOMATION_VERIFIED=2`. The checked-in maturity manifest is the authority: [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json).
