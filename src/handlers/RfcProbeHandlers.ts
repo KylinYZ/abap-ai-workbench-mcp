@@ -10,6 +10,7 @@ import { readRfcTable } from '../rfc/read-table-adapter.js';
 import { buildRfmDescription } from '../rfc/describe.js';
 import { isValidFmName } from '../rfc/interface.js';
 import { OpenRfcTransport, rfcParamsFromEnvironment } from '../rfc/open-rfc-transport.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -371,7 +372,7 @@ export class RfcProbeHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

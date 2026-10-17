@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 interface InactiveObject {
   "adtcore:uri": string;
@@ -141,7 +142,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: serializeJsonText(result)
         }]
       };
     } catch (error: any) {
@@ -173,7 +174,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: serializeJsonText(result)
         }]
       };
     } catch (error: any) {
@@ -196,7 +197,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: serializeJsonText(result)
         }]
       };
     } catch (error: any) {

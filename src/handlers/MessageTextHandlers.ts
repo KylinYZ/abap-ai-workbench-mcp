@@ -12,6 +12,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { MessageTextWorkflow } from '../safe/MessageTextWorkflow.js';
 import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompat.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const MESSAGE_TEXT_TOOL_NAMES = new Set([
   'previewMessageTextChange', 'applyMessageTextChange', 'getMessageTextChangeStatus'
@@ -146,7 +147,7 @@ export class MessageTextHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

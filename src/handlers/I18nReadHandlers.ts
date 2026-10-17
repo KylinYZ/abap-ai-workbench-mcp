@@ -4,6 +4,7 @@ import type {
   I18nReadClient,
   I18nObjectKind
 } from '../adt/I18nReadApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -222,7 +223,7 @@ export class I18nReadHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

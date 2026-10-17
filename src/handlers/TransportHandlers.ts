@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from "../adt/index.js";
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class TransportHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -317,7 +318,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             transportInfo
                         })
@@ -347,7 +348,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             transportNumber: transportResult,
                             message: 'Transport created successfully'
@@ -373,7 +374,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             hasConfig
                         })
@@ -398,7 +399,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             configurations
                         })
@@ -423,7 +424,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             configuration
                         })
@@ -448,7 +449,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -473,7 +474,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -498,7 +499,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             transports
                         })
@@ -523,7 +524,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             transports
                         })
@@ -548,7 +549,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -573,7 +574,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -598,7 +599,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -623,7 +624,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -648,7 +649,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             users
                         })
@@ -673,7 +674,7 @@ export class TransportHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             reference
                         })

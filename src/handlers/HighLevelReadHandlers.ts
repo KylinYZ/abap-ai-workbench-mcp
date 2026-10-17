@@ -4,6 +4,7 @@ import { RuntimeDumpReader, type RuntimeDumpInput } from '../read/RuntimeDumpRea
 import { ClassicTableInspector } from '../read/ClassicTableInspector.js';
 import { SystemInspector } from '../read/SystemInspector.js';
 import { AbapMemberSourceReader, type AbapMemberSourceInput } from '../read/AbapMemberSourceReader.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 type HighLevelReadToolDefinition = ToolDefinition & {
   annotations: {
@@ -136,7 +137,7 @@ function readOnlyTool(
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

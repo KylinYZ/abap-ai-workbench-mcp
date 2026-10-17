@@ -10,6 +10,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { HealthCapability } from '../adt/HealthApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const HEALTH_TOOL_NAMES = new Set(['analyzeHealth']);
 
@@ -56,7 +57,7 @@ export class HealthHandlers {
       const result = await analyzeHealth(this.health, input);
       const structuredContent = { status: 'success', result };
       return {
-        content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+        content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
         structuredContent
       };
     } catch (error) {

@@ -1,6 +1,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { analyzeLint, type LintInput, type LintResult } from '../adt/AnalyzeLintApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * analyzeLint MCP 处理器（analysis.lint 行收编）。
@@ -78,7 +79,7 @@ export class AnalyzeLintHandlers {
   private success(result: unknown): Record<string, any> {
     const structuredContent = { status: 'success', result };
     return {
-      content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+      content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
       structuredContent
     };
   }

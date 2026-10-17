@@ -20,6 +20,7 @@ import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { RuntimeDumpReader, type RuntimeDumpInput } from '../read/RuntimeDumpReader.js';
 import { findSimilarDumps, groupRuntimeDumps } from '../read/DumpAnalytics.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const DUMP_ANALYSIS_TOOL_NAMES = new Set(['groupRuntimeDumps', 'findSimilarDumps']);
 
@@ -47,7 +48,7 @@ function readOnlyTool(
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

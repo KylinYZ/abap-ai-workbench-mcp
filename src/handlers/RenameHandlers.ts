@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, RenameRefactoringProposal, RenameRefactoring } from '../adt/index.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class RenameHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -95,7 +96,7 @@ export class RenameHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -123,7 +124,7 @@ export class RenameHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -148,7 +149,7 @@ export class RenameHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

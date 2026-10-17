@@ -1,5 +1,6 @@
 import { McpError, ErrorCode } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 type ToolCall = (toolName: string, argumentsValue: Record<string, unknown>) => Promise<unknown>;
 type Healthcheck = () => unknown;
@@ -136,7 +137,7 @@ export class FocusedTaskHandlers {
 
 function render(result: Record<string, unknown>): Record<string, unknown> {
   const structuredContent = { status: 'success', result };
-  return { content: [{ type: 'text', text: JSON.stringify(structuredContent) }], structuredContent };
+  return { content: [{ type: 'text', text: serializeJsonText(structuredContent) }], structuredContent };
 }
 
 function unwrapResult(value: unknown): unknown {

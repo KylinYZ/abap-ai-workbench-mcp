@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class DiscoveryHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -112,7 +113,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             details
                         })
@@ -137,7 +138,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             details
                         })
@@ -162,7 +163,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             collection
                         })
@@ -187,7 +188,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             types
                         })
@@ -212,7 +213,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             discovery
                         })
@@ -237,7 +238,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             discovery
                         })
@@ -262,7 +263,7 @@ export class DiscoveryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             graph
                         })

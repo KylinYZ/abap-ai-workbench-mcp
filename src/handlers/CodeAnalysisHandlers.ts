@@ -4,6 +4,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from '../adt/index.js';
 import { sourceCache } from '../lib/sourceCache.js';
 import { readOnlyRawTool } from './rawToolMetadata.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class CodeAnalysisHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -279,7 +280,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -320,7 +321,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             usedCachedSource,
                             result
@@ -351,7 +352,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -384,7 +385,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -413,7 +414,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -438,7 +439,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -463,7 +464,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -488,7 +489,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -513,7 +514,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -538,7 +539,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -563,7 +564,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -588,7 +589,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -613,7 +614,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -638,7 +639,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

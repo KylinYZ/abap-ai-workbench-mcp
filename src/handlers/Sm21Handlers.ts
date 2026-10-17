@@ -4,6 +4,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import { analyzeRuntimeErrors } from '../sm21/runtimeAnalysis.js';
 import { parseSm21Request } from '../sm21/request.js';
 import type { Sm21Client, Sm21RuntimeConfig } from '../sm21/types.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class Sm21Handlers {
   constructor(
@@ -72,5 +73,5 @@ export class Sm21Handlers {
 }
 
 function success(payload: Record<string, unknown>): Record<string, unknown> {
-  return { content: [{ type: 'text', text: JSON.stringify({ status: 'success', ...payload }) }] };
+  return { content: [{ type: 'text', text: serializeJsonText({ status: 'success', ...payload }) }] };
 }

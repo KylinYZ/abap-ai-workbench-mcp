@@ -11,6 +11,7 @@ import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompa
 import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { TextPoolWorkflow } from '../safe/TextPoolWorkflow.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const TEXT_POOL_TOOL_NAMES = new Set(['previewTextPoolChange', 'applyTextPoolChange', 'getTextPoolChangeStatus']);
 
@@ -144,7 +145,7 @@ export class TextPoolHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

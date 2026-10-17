@@ -1,6 +1,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { RevisionSourceClient, RevisionSourceKind } from '../adt/RevisionSourceApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -295,7 +296,7 @@ export class RevisionSourceHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

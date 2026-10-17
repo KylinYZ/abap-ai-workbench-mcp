@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { sourceCache } from '../lib/sourceCache.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class AuthHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -56,7 +57,7 @@ export class AuthHandlers extends BaseHandler {
           {
             type: 'text',
             // ADTClient.login() intentionally returns no payload; keep MCP content valid.
-            text: JSON.stringify({ status: 'Logged in successfully' })
+            text: serializeJsonText({ status: 'Logged in successfully' })
           }
         ]
       };
@@ -79,7 +80,7 @@ export class AuthHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({ status: 'Logged out successfully' })
+            text: serializeJsonText({ status: 'Logged out successfully' })
           }
         ]
       };
@@ -102,7 +103,7 @@ export class AuthHandlers extends BaseHandler {
         content: [
           {
             type: 'text', 
-            text: JSON.stringify({ status: 'Session cleared' })
+            text: serializeJsonText({ status: 'Session cleared' })
           }
         ]
       };

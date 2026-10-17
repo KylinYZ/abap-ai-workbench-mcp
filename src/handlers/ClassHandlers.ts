@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, isClassStructure } from '../adt/index.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class ClassHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -67,7 +68,7 @@ export class ClassHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -92,7 +93,7 @@ export class ClassHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

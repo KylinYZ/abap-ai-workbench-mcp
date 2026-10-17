@@ -12,6 +12,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { AmdpDiscoveryClient } from '../adt/AmdpDiscoveryApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const AMDP_DISCOVERY_TOOL_NAMES = new Set(['checkAmdpDebugger']);
 
@@ -23,7 +24,7 @@ type AmdpDiscoveryToolDefinition = ToolDefinition & {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

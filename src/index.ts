@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { Server, inputRequired } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { McpError, ErrorCode } from "./lib/McpErrorCompat.js";
+import { serializeJsonText } from "./lib/jsonResponse.js";
 import { createMrtrElicitPort, ConfirmationRequiredError } from "./lib/MrtrElicitation.js";
 import { ADTClient, session_types } from "./adt/index.js";
 import path from 'path';
@@ -1141,9 +1142,8 @@ export class AbapAdtServer extends Server {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result, (key, value) =>
-            typeof value === 'bigint' ? value.toString() : value
-          )
+          // 统一走共享序列化出口:bigint 兜底与 SAP_MCP_JSON_PRETTY 缩进开关
+          text: serializeJsonText(result)
         }]
       };
     } catch (error) {
@@ -1165,7 +1165,7 @@ export class AbapAdtServer extends Server {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(error.toResponse())
+          text: serializeJsonText(error.toResponse())
         }],
         isError: true
       };
@@ -1174,7 +1174,7 @@ export class AbapAdtServer extends Server {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({
+          text: serializeJsonText({
             error: error.message,
             code: error.code
           })
@@ -1182,12 +1182,12 @@ export class AbapAdtServer extends Server {
         isError: true
       };
     }
-    // 未分类异常兜底：栈走 stderr（不进 MCP 响应、不含凭据），否则 500 无法定位
+    // 未分类异常兜底:栈走 stderr(不进 MCP 响应、不含凭据),否则 500 无法定位
     console.error('[abap-ai-workbench] unhandled tool error:', error instanceof Error ? (error.stack || error.message) : error);
     return {
       content: [{
         type: 'text',
-        text: JSON.stringify({
+        text: serializeJsonText({
           error: 'Internal server error',
           code: ErrorCode.InternalError
         })

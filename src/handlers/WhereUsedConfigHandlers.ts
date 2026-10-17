@@ -10,6 +10,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { WhereUsedConfigClient } from '../adt/WhereUsedConfigApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 type WhereUsedConfigToolDefinition = ToolDefinition & {
   annotations: {
@@ -87,7 +88,7 @@ export class WhereUsedConfigHandlers {
         ...(maxGrep !== undefined ? { maxGrep } : {})
       });
       return {
-        content: [{ type: 'text', text: JSON.stringify({ status: 'success', result }) }],
+        content: [{ type: 'text', text: serializeJsonText({ status: 'success', result }) }],
         structuredContent: { status: 'success', result }
       };
     } catch (error) {

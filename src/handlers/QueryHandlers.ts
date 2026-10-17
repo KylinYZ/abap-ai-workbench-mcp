@@ -1,6 +1,7 @@
 import { ADTClient } from '../adt/index.js';
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class QueryHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -86,7 +87,7 @@ export class QueryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -112,7 +113,7 @@ export class QueryHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

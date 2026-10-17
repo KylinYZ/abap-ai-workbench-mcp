@@ -10,6 +10,7 @@ import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { LoadGraphClient } from '../adt/LoadGraphApi.js';
 import { buildLoadDependencyGraph, LoadDependencyInputError, type LoadDependencyInput } from '../adt/LoadDependencyGraph.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 type LoadGraphToolDefinition = ToolDefinition & {
   annotations: {
@@ -90,7 +91,7 @@ export class LoadGraphHandlers {
           || Object.keys(argumentsValue).some(key => !allowed.includes(key))) throw invalid('Unsupported load dependency graph arguments.');
         const result = await buildLoadDependencyGraph(this.loadGraph, argumentsValue as unknown as LoadDependencyInput);
         const structuredContent = { status: 'success', result };
-        return { content: [{ type: 'text', text: JSON.stringify(structuredContent) }], structuredContent };
+        return { content: [{ type: 'text', text: serializeJsonText(structuredContent) }], structuredContent };
       }
       if (toolName !== 'getLoadGraph') {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown load-graph tool: ${toolName}`);
@@ -102,7 +103,7 @@ export class LoadGraphHandlers {
       const direction = typeof argumentsValue?.direction === 'string' ? argumentsValue.direction : undefined;
       const result = await this.loadGraph.getLoadGraph({ objectName, ...(direction ? { direction } : {}) });
       return {
-        content: [{ type: 'text', text: JSON.stringify({ status: 'success', result }) }],
+        content: [{ type: 'text', text: serializeJsonText({ status: 'success', result }) }],
         structuredContent: { status: 'success', result }
       };
     } catch (error) {

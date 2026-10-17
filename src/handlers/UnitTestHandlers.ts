@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, UnitTestRunFlags } from '../adt/index.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class UnitTestHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -112,7 +113,7 @@ export class UnitTestHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -146,7 +147,7 @@ export class UnitTestHandlers extends BaseHandler {
                 return {
                     content: [{
                         type: 'text',
-                        text: JSON.stringify({ status: 'success', result: [], note: `No unit tests found for ${className}.` })
+                        text: serializeJsonText({ status: 'success', result: [], note: `No unit tests found for ${className}.` })
                     }]
                 };
             }
@@ -165,7 +166,7 @@ export class UnitTestHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -190,7 +191,7 @@ export class UnitTestHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             markers
                         })
@@ -215,7 +216,7 @@ export class UnitTestHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result,
                             message: 'Test include created successfully'

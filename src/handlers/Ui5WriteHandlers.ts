@@ -11,6 +11,7 @@ import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompa
 import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { Ui5WriteWorkflow } from '../safe/Ui5WriteWorkflow.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const UI5_WRITE_TOOL_NAMES = new Set(['previewUi5Operation', 'applyUi5Operation', 'getUi5OperationStatus']);
 
@@ -140,7 +141,7 @@ export class Ui5WriteHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

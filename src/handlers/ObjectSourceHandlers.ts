@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
 import { session_types, type ADTClient } from "../adt/index.js";
 import { sourceCache } from '../lib/sourceCache';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 interface TextToolResult {
   content: Array<{
@@ -101,7 +102,7 @@ export class ObjectSourceHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({
+            text: serializeJsonText({
               status: 'success',
               source,
               totalLines,
@@ -146,7 +147,7 @@ export class ObjectSourceHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({
+            text: serializeJsonText({
               status: 'success',
               updated: true
             })

@@ -10,6 +10,7 @@ import type {
 } from '../safe/qualityTypes.js';
 import type { PreviewQualityCheckInput } from '../safe/QualityCheckWorkflow.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export interface SafeQualityWorkflowPort extends QualityCheckStatusReader {
   preview(input: PreviewQualityCheckInput): Promise<QualityCheckPreviewResult | QualityVariantRequiredResult>;
@@ -135,7 +136,7 @@ function planIdSchema(): ToolDefinition['inputSchema'] {
 function render(value: unknown): Record<string, unknown> {
   const structuredContent = value as Record<string, unknown>;
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

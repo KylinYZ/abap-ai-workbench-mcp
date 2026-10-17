@@ -3,6 +3,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import type { ReportVariantsClient } from '../adt/ReportVariantsApi.js';
 import type { ReportJobClient, RunReportInput } from '../adt/ReportJobApi.js';
 import { HelperRfcBridge, HelperRfcBridgeError } from '../adt/HelperRfcApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -272,7 +273,7 @@ export class ReportHandlers {
   private success(result: unknown): Record<string, any> {
     const structuredContent = { status: 'success', result };
     return {
-      content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+      content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
       structuredContent
     };
   }

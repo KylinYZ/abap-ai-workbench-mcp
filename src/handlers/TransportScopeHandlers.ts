@@ -3,6 +3,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import type { TransportHistoryQueryRunner } from '../adt/TransportHistoryApi.js';
 import { collectTransportScope, TransportScopeInputError } from '../adt/TransportScope.js';
 import { collectTransportLoadBoundaries, type TransportLoadBoundaryInput } from '../adt/TransportLoadBoundaries.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class TransportScopeHandlers {
   constructor(private readonly runQuery: TransportHistoryQueryRunner) {}
@@ -44,7 +45,7 @@ export class TransportScopeHandlers {
         ? await collectTransportLoadBoundaries(this.runQuery, args as unknown as TransportLoadBoundaryInput)
         : await collectTransportScope(this.runQuery, args as unknown as { transports: string[] });
       const structuredContent = { status: 'success', result };
-      return { content: [{ type: 'text' as const, text: JSON.stringify(structuredContent) }], structuredContent };
+      return { content: [{ type: 'text' as const, text: serializeJsonText(structuredContent) }], structuredContent };
     } catch (error) {
       if (error instanceof TransportScopeInputError) throw new McpError(ErrorCode.InvalidParams, error.message);
       throw new McpError(ErrorCode.InternalError, 'Transport scope collection failed.');

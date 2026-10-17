@@ -1,6 +1,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { InstallDiagnosticsClient } from '../adt/InstallDiagnosticsApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -91,7 +92,7 @@ export class InstallDiagnosticsHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

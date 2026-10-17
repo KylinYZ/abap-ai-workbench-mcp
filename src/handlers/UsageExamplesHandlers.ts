@@ -11,6 +11,7 @@
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import type { ToolDefinition } from '../types/tools.js';
 import type { UsageExamplesClient } from '../adt/UsageExamplesApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 type UsageExamplesToolDefinition = ToolDefinition & {
   annotations: {
@@ -115,7 +116,7 @@ export class UsageExamplesHandlers {
         ...(maxExamples !== undefined ? { maxExamples } : {})
       });
       return {
-        content: [{ type: 'text', text: JSON.stringify({ status: 'success', result }) }],
+        content: [{ type: 'text', text: serializeJsonText({ status: 'success', result }) }],
         structuredContent: { status: 'success', result }
       };
     } catch (error) {

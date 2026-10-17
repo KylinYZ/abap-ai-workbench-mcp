@@ -3,6 +3,7 @@ import type { ADTClient } from "../adt/index.js";
 import { performance } from 'perf_hooks';
 import { createLogger } from '../lib/logger';
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export abstract class BaseHandler {
   protected readonly adtclient: ADTClient;
@@ -60,7 +61,7 @@ export abstract class BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({ status: 'success', result })
+          text: serializeJsonText({ status: 'success', result })
         }]
       };
     } catch {

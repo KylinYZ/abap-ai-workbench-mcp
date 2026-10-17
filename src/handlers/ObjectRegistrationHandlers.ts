@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class ObjectRegistrationHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -68,7 +69,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({
+          text: serializeJsonText({
             status: 'success',
             info
           })
@@ -91,7 +92,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({
+          text: serializeJsonText({
             status: 'success',
             result
           })
@@ -122,7 +123,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({
+          text: serializeJsonText({
             status: 'success',
             result
           })

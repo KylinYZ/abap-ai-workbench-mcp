@@ -4,6 +4,7 @@ import type {
   ContextAnalysisClient,
   SourceKind
 } from '../adt/ContextCompressionApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -375,7 +376,7 @@ function optionalBoundedNumber(
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

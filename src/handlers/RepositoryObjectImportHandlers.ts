@@ -13,6 +13,7 @@ import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompa
 import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { RepositoryObjectImportWorkflow } from '../safe/RepositoryObjectImportWorkflow.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const IMPORT_TOOL_NAMES = new Set([
   'previewRepositoryObjectImport',
@@ -157,7 +158,7 @@ export class RepositoryObjectImportHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

@@ -5,6 +5,7 @@ import {
   type DependencySnapshot, type GraphEdgeKind
 } from '../lib/DependencyGraph.js';
 import { transportBoundaries } from '../lib/TransportBoundaries.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const MAX_NODES = 500;
 const MAX_EDGES = 2000;
@@ -115,7 +116,7 @@ export class DependencyGraphHandlers {
       ]
     };
     const structuredContent = { status: 'success', result };
-    return { content: [{ type: 'text', text: JSON.stringify(structuredContent) }], structuredContent };
+    return { content: [{ type: 'text', text: serializeJsonText(structuredContent) }], structuredContent };
   }
 }
 

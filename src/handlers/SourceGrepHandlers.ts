@@ -7,6 +7,7 @@ import type {
   SourceGrepObjectType
 } from '../adt/SourceGrepApi.js';
 import { SOURCE_GREP_OBJECT_TYPES } from '../adt/SourceGrepApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -351,7 +352,7 @@ function readOnlyTool(
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

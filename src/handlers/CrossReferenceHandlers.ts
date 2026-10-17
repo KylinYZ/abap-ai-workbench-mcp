@@ -4,6 +4,7 @@ import type {
   CrossReferenceClient,
   CrossReferenceObjectType
 } from '../adt/CrossReferenceApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -206,7 +207,7 @@ export class CrossReferenceHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

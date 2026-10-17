@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { AbapObjectStructure, classIncludes } from '../adt/index.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class RevisionHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -46,7 +47,7 @@ export class RevisionHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             revisions
                         })

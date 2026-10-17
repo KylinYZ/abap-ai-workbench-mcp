@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, PackageValueHelpType } from '../adt/index.js';
 import { mutatingRawTool, readOnlyRawTool } from './rawToolMetadata.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class DdicHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -140,7 +141,7 @@ export class DdicHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -170,7 +171,7 @@ export class DdicHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -195,7 +196,7 @@ export class DdicHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -220,7 +221,7 @@ export class DdicHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

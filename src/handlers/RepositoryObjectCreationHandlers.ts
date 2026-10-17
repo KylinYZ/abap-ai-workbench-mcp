@@ -14,6 +14,7 @@ import { SafeAbapError } from '../safe/errors.js';
 import type { RepositoryCreationContext } from '../safe/repositoryCreationTypes.js';
 import { REPOSITORY_OBJECT_KINDS } from '../safe/repositoryCreationTypes.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const REPOSITORY_CREATION_TOOL_NAMES = new Set([
   'listRepositoryObjectCreationCapabilities',
@@ -456,7 +457,7 @@ class SafeConfigurationError extends McpError {
 
 function render(structuredContent: Record<string, unknown>): Record<string, unknown> {
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

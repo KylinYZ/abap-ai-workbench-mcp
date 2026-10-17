@@ -18,6 +18,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { RenameControlledWorkflow } from '../safe/RenameControlledWorkflow.js';
 import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompat.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const RENAME_TOOL_NAMES = new Set([
   'previewControlledRename', 'applyControlledRename', 'getControlledRenameStatus'
@@ -145,7 +146,7 @@ export class RenameControlledHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, session_types } from "../adt/index.js";
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class ObjectLockHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -64,7 +65,7 @@ export class ObjectLockHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({
+            text: serializeJsonText({
               status: 'success',
               lockHandle: lockResult.LOCK_HANDLE,
               message: 'Object locked successfully'
@@ -92,7 +93,7 @@ export class ObjectLockHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({
+            text: serializeJsonText({
               status: 'success',
               message: 'Object unlocked successfully'
             })

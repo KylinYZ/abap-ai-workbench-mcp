@@ -10,6 +10,7 @@ import {
   APPLICATION_LOG_USER_MAX_LENGTH,
   sapDateWindowFromIso
 } from '../adt/ApplicationLogApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -252,7 +253,7 @@ function readOnlyTool(
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

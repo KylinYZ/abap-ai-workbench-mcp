@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from "../adt/index.js";
 import { readOnlyRawTool } from './rawToolMetadata.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class ObjectHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -126,11 +127,11 @@ export class ObjectHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             structure,
                             message: 'Object structure retrieved successfully'
-                        }, null, 2)
+                        })
                     }
                 ]
             };
@@ -154,11 +155,11 @@ export class ObjectHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             path,
                             message: 'Object path found successfully'
-                        }, null, 2)
+                        })
                     }
                 ]
             };
@@ -186,11 +187,11 @@ export class ObjectHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             results,
                             message: 'Object search completed successfully'
-                        }, null, 2)
+                        })
                     }
                 ]
             };
@@ -214,11 +215,11 @@ export class ObjectHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             types,
                             message: 'Object types retrieved successfully'
-                        }, null, 2)
+                        })
                     }
                 ]
             };
@@ -242,11 +243,11 @@ export class ObjectHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             ticket,
                             message: 'Reentrance ticket retrieved successfully'
-                        }, null, 2)
+                        })
                     }
                 ]
             };

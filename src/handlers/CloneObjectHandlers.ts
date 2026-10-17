@@ -16,6 +16,7 @@ import type { ToolDefinition } from '../types/tools.js';
 import { SafeAbapError } from '../safe/errors.js';
 import type { CloneObjectWorkflow } from '../safe/CloneObjectWorkflow.js';
 import type { ElicitRequestFormParams, ElicitResult } from '../lib/McpErrorCompat.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 const CLONE_TOOL_NAMES = new Set([
   'previewCloneObject', 'applyCloneObject', 'getCloneObjectStatus'
@@ -143,7 +144,7 @@ export class CloneObjectHandlers {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

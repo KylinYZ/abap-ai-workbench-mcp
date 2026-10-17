@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, Range, ExtractMethodProposal, GenericRefactoring } from '../adt/index.js';
 import { mutatingRawTool, readOnlyRawTool } from './rawToolMetadata.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class RefactorHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -110,7 +111,7 @@ export class RefactorHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -136,7 +137,7 @@ export class RefactorHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })
@@ -162,7 +163,7 @@ export class RefactorHandlers extends BaseHandler {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify({
+                        text: serializeJsonText({
                             status: 'success',
                             result
                         })

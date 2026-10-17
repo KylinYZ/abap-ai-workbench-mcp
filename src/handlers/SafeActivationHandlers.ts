@@ -25,6 +25,7 @@ import type {
   PreviewObjectActivationInput
 } from '../safe/objectActivationTypes.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /** handlers 依赖的工作流端口（便于测试 mock）。 */
 export interface SafeActivationWorkflowPort extends ObjectActivationStatusReader {
@@ -150,7 +151,7 @@ function planIdSchema(): ToolDefinition['inputSchema'] {
 function render(value: unknown): Record<string, unknown> {
   const structuredContent = value as Record<string, unknown>;
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

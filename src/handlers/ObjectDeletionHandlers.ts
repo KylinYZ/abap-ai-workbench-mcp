@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "../lib/McpErrorCompat.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient, session_types } from "../adt/index.js";
+import { serializeJsonText } from '../lib/jsonResponse';
 
 export class ObjectDeletionHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -56,11 +57,11 @@ export class ObjectDeletionHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({
+            text: serializeJsonText({
               status: 'success',
               result,
               message: 'Object deleted successfully'
-            }, null, 2)
+            })
           }
         ]
       };

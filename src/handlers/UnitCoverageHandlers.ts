@@ -5,6 +5,7 @@ import type {
   UnitCoverageObjectType,
   UnitCoverageQuery
 } from '../adt/UnitCoverageApi.js';
+import { serializeJsonText } from '../lib/jsonResponse';
 
 /**
  * ============================================================================
@@ -212,7 +213,7 @@ function invalid(message: string): McpError {
 function success(result: unknown): Record<string, any> {
   const structuredContent = { status: 'success', result };
   return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+    content: [{ type: 'text', text: serializeJsonText(structuredContent) }],
     structuredContent
   };
 }

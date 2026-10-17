@@ -227,6 +227,20 @@ export function parseQueryResponse(body: string) {
     return { columns, values }
 }
 
+/**
+ * 行数上限裁剪:ADT datapreview 服务端对 rowNumber 存在 +1 口径(真机实证:
+ * rowNumber=5 时返回 6 行),客户端在 parse 之后统一裁剪,保证"最多返回
+ * rowNumber 行"的承诺语义;服务端多出的附加行按顺序丢弃。rowNumber 非法
+ * (非有限数字或负数)时不裁剪,保持服务端原样返回。
+ */
+export function limitQueryRows<T extends { values: any[] }>(result: T, rowNumber: number): T {
+    const limit = Number(rowNumber)
+    if (Number.isFinite(limit) && limit >= 0 && result.values.length > limit) {
+        return { ...result, values: result.values.slice(0, limit) }
+    }
+    return result
+}
+
 export const parseBindingDetails = (xml: string) => {
     const s = fullParse(xml, { removeNSPrefix: true, parseAttributeValue: false })
     const link = xmlNodeAttr(s?.serviceList?.link)
@@ -273,8 +287,9 @@ export async function tableContents(
         { qs, headers, method: "POST", body: sqlQuery }
     )
     const queryResult = parseQueryResponse(response.body)
-    if (decode) return decodeQueryResult(queryResult)
-    return queryResult
+    const limited = limitQueryRows(queryResult, rowNumber)
+    if (decode) return decodeQueryResult(limited)
+    return limited
 }
 
 export async function runQuery(
@@ -291,8 +306,9 @@ export async function runQuery(
         { qs, headers, method: "POST", body: sqlQuery }
     )
     const queryResult = parseQueryResponse(response.body)
-    if (decode) return decodeQueryResult(queryResult)
-    return queryResult
+    const limited = limitQueryRows(queryResult, rowNumber)
+    if (decode) return decodeQueryResult(limited)
+    return limited
 }
 
 export async function bindingDetails(
