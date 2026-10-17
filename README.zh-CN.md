@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- 版本 `0.10.0`，npm 包为 `abap-ai-workbench-mcp@0.10.0` —— S/4HANA 低版本适配（BASIS 7.50/7.51）：版本能力协商与逐工具门控、RFC 读表 72 字符兼容、受控创建 kind 收窄。完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
+- 版本 `0.10.1`，npm 包为 `abap-ai-workbench-mcp@0.10.1` —— 工具响应 JSON 格式化开关（`SAP_MCP_JSON_PRETTY`）与 `tableContents`/`runQuery` 的 rowNumber 客户端裁剪（ADT datapreview 服务端存在 +1 口径）。0.10.0 = S/4HANA 低版本适配（BASIS 7.50/7.51）：版本能力协商与逐工具门控、RFC 读表 72 字符兼容、受控创建 kind 收窄。完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
 - 代码仓库：[`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp)（维护主仓库；原仓库 `KylinYZ/mcp-abap-adt` 不再更新）。
 - 角色入口：`focused` / `developer`（185 个工具）、`business`（18）、`operations`（58）、`expert`（220）。旧 profile（`safe`、`development`、`diagnostic-readonly`、`legacy-full`）继续兼容，完整目录见[产品定位](docs/产品定位.md)。
 - 仓库对象创建目录固定 31 类：`REAL_DEV_VERIFIED=28`、`CONTROLLED_IMPLEMENTED=1`、`AUTOMATION_VERIFIED=2`。权威成熟度文件为 [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json)。
@@ -19,7 +19,7 @@
 ### npm（推荐）
 
 ```bash
-npx -y abap-ai-workbench-mcp@0.10.0
+npx -y abap-ai-workbench-mcp@0.10.1
 ```
 
 MCP 配置示例：
@@ -29,7 +29,7 @@ MCP 配置示例：
   "mcpServers": {
     "abap-ai-workbench-mcp": {
       "command": "npx",
-      "args": ["-y", "abap-ai-workbench-mcp@0.10.0"],
+      "args": ["-y", "abap-ai-workbench-mcp@0.10.1"],
       "env": { "SAP_MCP_ENV_FILE": "D:\\path\\to\\sap-dev.env" }
     }
   }

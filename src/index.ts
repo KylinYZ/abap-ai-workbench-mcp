@@ -2,7 +2,7 @@
 
 import { config } from 'dotenv';
 import { randomUUID } from 'crypto';
-// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次；0.9.2：analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套；0.10.0：S/4 低版本适配（BASIS 7.50/7.51 版本能力协商 + RFC 读表 72 字符兼容，见 CHANGELOG）。
+// 0.9.0：协议栈迁移到官方 v2 双栈包（2026-07-28 modern + 2025 legacy）；0.9.1：能力收编批次；0.9.2：analysis.lint 与 rfc.helper-bridge 晋级 64/71 + 受控导入三件套；0.10.0：S/4 低版本适配（BASIS 7.50/7.51 版本能力协商 + RFC 读表 72 字符兼容，见 CHANGELOG）；0.10.1：工具响应 JSON 格式化开关 SAP_MCP_JSON_PRETTY + tableContents/runQuery rowNumber 客户端裁剪（datapreview 服务端 +1 口径）。
 // 低层 Server 保留自管工具目录模式；stdio 传输生命周期由 serveStdio 拥有。
 import { Server, inputRequired } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
@@ -328,7 +328,7 @@ export class AbapAdtServer extends Server {
     super(
       {
         name: "abap-ai-workbench-mcp",
-        version: "0.10.0",
+        version: "0.10.1",
       },
       {
         capabilities: {

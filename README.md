@@ -8,7 +8,7 @@
 
 ## Current release
 
-- Version `0.10.0`, published as `abap-ai-workbench-mcp@0.10.0` — S/4HANA low-release adaptation (BASIS 7.50/7.51): release-capability negotiation with per-tool gating, 72-character RFC read-table compatibility, and controlled-creation kind trimming. Full history: [`CHANGELOG.md`](CHANGELOG.md).
+- Version `0.10.1`, published as `abap-ai-workbench-mcp@0.10.1` — response-JSON formatting switch (`SAP_MCP_JSON_PRETTY`) and client-enforced `rowNumber` cap on `tableContents`/`runQuery` (the ADT datapreview service returns one row more than requested). 0.10.0 = S/4HANA low-release adaptation (BASIS 7.50/7.51): release-capability negotiation with per-tool gating, 72-character RFC read-table compatibility, and controlled-creation kind trimming. Full history: [`CHANGELOG.md`](CHANGELOG.md).
 - Repository: [`KylinYZ/abap-ai-workbench-mcp`](https://github.com/KylinYZ/abap-ai-workbench-mcp) — the maintenance repo; the previous repo `KylinYZ/mcp-abap-adt` is no longer updated.
 - Role entry points: `focused`/`developer` (185 tools), `business` (18), `operations` (58), `expert` (220). Older profiles (`safe`, `development`, `diagnostic-readonly`, `legacy-full`) remain supported; see [`docs/产品定位.md`](docs/产品定位.md).
 - Repository creation catalog: 31 kinds — `REAL_DEV_VERIFIED=28`, `CONTROLLED_IMPLEMENTED=1`, `AUTOMATION_VERIFIED=2`. The checked-in manifest is the authority: [`docs/evidence/repository-creation-maturity-evidence.json`](docs/evidence/repository-creation-maturity-evidence.json).
@@ -19,7 +19,7 @@
 ### npm (recommended)
 
 ```bash
-npx -y abap-ai-workbench-mcp@0.10.0
+npx -y abap-ai-workbench-mcp@0.10.1
 ```
 
 Example MCP configuration:
@@ -29,7 +29,7 @@ Example MCP configuration:
   "mcpServers": {
     "abap-ai-workbench-mcp": {
       "command": "npx",
-      "args": ["-y", "abap-ai-workbench-mcp@0.10.0"],
+      "args": ["-y", "abap-ai-workbench-mcp@0.10.1"],
       "env": { "SAP_MCP_ENV_FILE": "C:\\path\\to\\sap-dev.env" }
     }
   }
