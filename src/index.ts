@@ -627,8 +627,8 @@ export class AbapAdtServer extends Server {
     }));
     // RFC 探测只读工具（rfc.remote-enabled.discovery 直链）：open-rfc 直连
     // SAP 网关（node:net，无 SDK），连接参数由既有 ADT 环境推导（主机/
-    // client/凭据同源，实例号经 RFC_SYSNR 覆盖，缺省 '01' 与专用 DEV
-    // .vsp.json rfc_sysnr 实测一致）。
+    // client/凭据同源，实例号经 RFC_SYSNR 覆盖，缺省 '00'——多数系统
+    // 主实例号为 00）。
     const rfcTargetHost = new URL(process.env.SAP_URL as string).hostname;
     this.rfcProbeHandlers = new RfcProbeHandlers(
       {

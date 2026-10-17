@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [Unreleased]
+- **`RFC_SYSNR` default changed from `01` to `00`**: the classic-RFC direct link (probeRfcSystem / readRfcTable / describeRfm / callRfm) derives its instance number from the existing ADT environment, and most SAP primary instances are 00 (HTTP 80NN ↔ gateway 33NN). Environments on a different instance keep setting `RFC_SYSNR` explicitly; nothing else about the connection model changed (host/client/credentials still derive from the ADT settings, no second credential source).
+
 ## [0.10.0] - 2026-10-16
 - **S/4HANA low-release adaptation (BASIS 7.50/7.51, i.e. S/4HANA 1511/1610)** — release-capability negotiation, not capability rebuilding: the tool catalog stays identical on modern releases and trims automatically on older ones. Planning and the real-DEV (ED1 = S/4HANA 1610 SP2, BASIS 751 SP2, kernel 749, HANA) evidence baseline under `docs/S4低版本适配规划.md` / `docs/evidence/low-release-ed1-751-baseline.md`.
 - **Release fingerprint + per-tool gating (M1)**: on startup the server lazily probes `RFC_SYSTEM_INFO` (RFCSAPRL, 8-second dedicated timeout so `tools/list` never crosses client protocol timeouts; failure disables the gate with zero behavior change — fail-closed against guessing). A deployment may also pin the release via the new `SAP_MCP_BASIS_RELEASE` env (highest priority). Gating is double-retained like the system-role gate: tools below their `minBasisRelease` are hidden from `tools/list` AND rejected on dispatch with an explicit version reason. Currently registered: the whole RAP generator surface (11 tools, min 755) and the AMDP debug kinds (min 753, kind-level — the generic ABAP debugger is unaffected). `healthcheck` now reports a `sapRelease` section (effective release, source `configured-env|rfc-probe|unresolved|unavailable`, trimmed-tool list).

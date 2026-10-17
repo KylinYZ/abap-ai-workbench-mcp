@@ -14,8 +14,8 @@ import { AdapterFunctionInterface, TransportAdapter, RfcTransportInvokeRequest }
  * 真实网络。
  *
  * 连接参数来源：由既有 ADT 系统配置推导（SAP_URL 主机 + SAP_CLIENT +
- * SAP_USER/SAP_PASSWORD + RFC_SYSNR 实例号，缺省 '01'——与专用 DEV 的
- * .vsp.json rfc_sysnr 一致；经典 RFC 网关端口 = 3300+sysnr）。
+ * SAP_USER/SAP_PASSWORD + RFC_SYSNR 实例号，缺省 '00'——多数 SAP 系统
+ * 主实例号为 00，个别环境经 RFC_SYSNR 显式覆盖；经典 RFC 网关端口 = 3300+sysnr）。
  *
  * 错误映射规则：
  * - open-rfc 的网络/登录/系统故障 → `RFC_TRANSPORT_FAILURE`（连接池据此剔除）；
@@ -236,7 +236,7 @@ export interface AdtDerivedRfcConfig {
   readonly user: string
   readonly password?: string
   readonly language?: string
-  /** RFC 实例号；缺省 '01'（专用 DEV .vsp.json rfc_sysnr 实测值）。 */
+  /** RFC 实例号；缺省 '00'（多数系统主实例号为 00，例外环境显式覆盖）。 */
   readonly sysnr?: string
 }
 
@@ -248,6 +248,6 @@ export function rfcParamsFromEnvironment(config: AdtDerivedRfcConfig): RfcConnec
     user: config.user,
     password: config.password,
     language: config.language ?? 'EN',
-    sysnr: config.sysnr ?? '01'
+    sysnr: config.sysnr ?? '00'
   });
 }

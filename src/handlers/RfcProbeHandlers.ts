@@ -71,7 +71,7 @@ export class RfcProbeHandlers {
 
   /**
    * @param rfcConfig ADT 环境推导的 RFC 连接参数（host/client/user/password/
-   *   language + 可选 sysnr 覆盖，缺省 '01'）
+   *   language + 可选 sysnr 覆盖，缺省 '00'）
    * @param pool 可选的连接池（复用与 keep-alive）；未提供时退化为单连接适配器
    */
   constructor(
