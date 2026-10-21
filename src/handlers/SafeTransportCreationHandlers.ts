@@ -1,7 +1,7 @@
 /**
- * 受控传输请求创建与清理的 MCP 工具处理器（SafeTransportCreationHandlers）。
+ * 受控传输请求创建/清理/释放的 MCP 工具处理器（SafeTransportCreationHandlers）。
  *
- * 暴露两组三件套（与受控激活三件套同构）：
+ * 暴露三组三件套（与受控激活三件套同构）：
  * - 创建（cts.create-request 专属动作）：
  *   previewTransportCreation：只读 CTS 预检并冻结创建 plan（read-only）。
  *   applyTransportCreation：发起原生确认并单次执行冻结 plan（mutating）。
@@ -11,14 +11,21 @@
  *   并冻结清理 plan（read-only）；任一红线不满足即拒。
  *   applyTransportCleanup：发起原生确认并单次删除 + 缺席验证（mutating）。
  *   getTransportCleanupStatus：本地查询清理 plan 状态（local 语义）。
+ * - 释放（所有者 2026-10-21 边界调整：受控释放 DEV 请求）：
+ *   previewTransportRelease：只读核验"状态 D + 本人属主"两条红线并冻结
+ *   释放 plan（read-only）；子任务未释放数仅透出不拦截。
+ *   applyTransportRelease：发起原生确认并单次标准释放（newreleasejobs，
+ *   无锁/ATC 绕行）+ 轮询读回验证 status=R（mutating）。
+ *   getTransportReleaseStatus：本地查询释放 plan 状态（local 语义）。
  *
  * 安全规则：
- * - 创建：仅创建一个动作；清理：仅删空请求。释放、改属主、加用户与直改
- *   E071/E071K 不在任何工具的入参或链路里。
+ * - 创建：仅创建一个动作；清理：仅删空请求；释放：仅标准释放本人未释放
+ *   请求。改属主、加用户与直改 E071/E071K 不在任何工具的入参或链路里；
+ *   STMS 导入也不在本链路面。
  * - apply 不接受调用方布尔确认，只走各自 Confirmation 的 MCP form
  *   elicitation 原生确认；plan 之外的任何 URL/请求号一律不可传入。
  * - profile/role 门控由 ToolOperationPolicy 与 ToolProfiles 承担：
- *   六工具均仅 DEV + development/development-workbench 可见可用。
+ *   九工具均仅 DEV + development/development-workbench 可见可用。
  */
 import { ErrorCode, McpError } from '../lib/McpErrorCompat.js';
 import {
@@ -31,6 +38,11 @@ import {
   type TransportCleanupConfirmationOptions,
   type TransportCleanupStatusReader
 } from '../safe/TransportCleanupConfirmation.js';
+import {
+  TransportReleaseConfirmation,
+  type TransportReleaseConfirmationOptions,
+  type TransportReleaseStatusReader
+} from '../safe/TransportReleaseConfirmation.js';
 import type {
   PreviewTransportCreationInput,
   TransportCreationPlanView,
@@ -41,6 +53,11 @@ import type {
   TransportCleanupPlanView,
   TransportCleanupPreviewResult
 } from '../safe/transportCleanupTypes.js';
+import type {
+  PreviewTransportReleaseInput,
+  TransportReleasePlanView,
+  TransportReleasePreviewResult
+} from '../safe/transportReleaseTypes.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { serializeJsonText } from '../lib/jsonResponse';
 
@@ -54,29 +71,43 @@ export interface SafeTransportCleanupWorkflowPort extends TransportCleanupStatus
   preview(input: PreviewTransportCleanupInput): Promise<TransportCleanupPreviewResult>;
 }
 
-/** 本 handlers 拥有的工具名集合（supports 判定用）：创建三件套 + 清理三件套。 */
+/** handlers 依赖的释放工作流端口（便于测试 mock）。 */
+export interface SafeTransportReleaseWorkflowPort extends TransportReleaseStatusReader {
+  preview(input: PreviewTransportReleaseInput): Promise<TransportReleasePreviewResult>;
+}
+
+/** 本 handlers 拥有的工具名集合（supports 判定用）：创建 + 清理 + 释放三件套。 */
 const SAFE_TRANSPORT_CREATION_TOOL_NAMES = new Set([
   'previewTransportCreation',
   'applyTransportCreation',
   'getTransportCreationStatus',
   'previewTransportCleanup',
   'applyTransportCleanup',
-  'getTransportCleanupStatus'
+  'getTransportCleanupStatus',
+  'previewTransportRelease',
+  'applyTransportRelease',
+  'getTransportReleaseStatus'
 ]);
 
 export class SafeTransportCreationHandlers {
   private readonly confirmation: TransportCreationConfirmation;
   private readonly cleanupConfirmation?: TransportCleanupConfirmation;
+  private readonly releaseConfirmation?: TransportReleaseConfirmation;
 
   constructor(
     private readonly workflow: SafeTransportCreationWorkflowPort,
     confirmationOptions: TransportCreationConfirmationOptions,
     private readonly cleanupWorkflow?: SafeTransportCleanupWorkflowPort,
-    cleanupConfirmationOptions?: TransportCleanupConfirmationOptions
+    cleanupConfirmationOptions?: TransportCleanupConfirmationOptions,
+    private readonly releaseWorkflow?: SafeTransportReleaseWorkflowPort,
+    releaseConfirmationOptions?: TransportReleaseConfirmationOptions
   ) {
     this.confirmation = new TransportCreationConfirmation(workflow, confirmationOptions);
     if (cleanupWorkflow && cleanupConfirmationOptions) {
       this.cleanupConfirmation = new TransportCleanupConfirmation(cleanupWorkflow, cleanupConfirmationOptions);
+    }
+    if (releaseWorkflow && releaseConfirmationOptions) {
+      this.releaseConfirmation = new TransportReleaseConfirmation(releaseWorkflow, releaseConfirmationOptions);
     }
   }
 
@@ -85,8 +116,8 @@ export class SafeTransportCreationHandlers {
     return SAFE_TRANSPORT_CREATION_TOOL_NAMES.has(toolName);
   }
 
-  /** 工具定义：preview/status 只读，apply 需原生确认；清理三件套可选收录。 */
-  getTools(includeCleanup = true): ToolDefinition[] {
+  /** 工具定义：preview/status 只读，apply 需原生确认；清理/释放三件套可选收录。 */
+  getTools(includeCleanup = true, includeRelease = true): ToolDefinition[] {
     const tools = [
       creationTool(
         'previewTransportCreation',
@@ -136,6 +167,32 @@ export class SafeTransportCreationHandlers {
         )
       );
     }
+    if (includeRelease) {
+      // 释放三件套（受控释放边界：状态 D + 本人属主，标准释放无锁/ATC 绕行）
+      tools.push(
+        creationTool(
+          'previewTransportRelease',
+          'Verify one transport request is modifiable (status D) and owned by the current user (read-only) and freeze one bounded release plan without releasing anything.',
+          releasePreviewSchema(),
+          true,
+          false
+        ),
+        creationTool(
+          'applyTransportRelease',
+          'Open one native confirmation and run the standard release for the frozen transport request exactly once (no lock/ATC bypass); the release is verified by read-back polling and unknown outcomes are never retried.',
+          releasePlanIdSchema(),
+          false,
+          true
+        ),
+        creationTool(
+          'getTransportReleaseStatus',
+          'Read the local status and bounded result summary of one transport-release plan.',
+          releasePlanIdSchema(),
+          true,
+          false
+        )
+      );
+    }
     return tools;
   }
 
@@ -163,6 +220,18 @@ export class SafeTransportCreationHandlers {
           status: 'success',
           plan: this.requireCleanupWorkflow().status(String(args.transportCleanupPlanId || ''))
         });
+      case 'previewTransportRelease':
+        return render(await this.requireReleaseWorkflow().preview(
+          args as unknown as PreviewTransportReleaseInput
+        ));
+      case 'applyTransportRelease':
+        if (!this.releaseConfirmation) throw new SafeReleaseConfigurationError();
+        return this.releaseConfirmation.confirmAndRun(String(args.transportReleasePlanId || ''));
+      case 'getTransportReleaseStatus':
+        return render({
+          status: 'success',
+          plan: this.requireReleaseWorkflow().status(String(args.transportReleasePlanId || ''))
+        });
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown transport creation tool: ${toolName}`);
     }
@@ -173,12 +242,25 @@ export class SafeTransportCreationHandlers {
     if (!this.cleanupWorkflow) throw new SafeCleanupConfigurationError();
     return this.cleanupWorkflow;
   }
+
+  /** 释放工作流未配置时的确定性错误。 */
+  private requireReleaseWorkflow(): SafeTransportReleaseWorkflowPort {
+    if (!this.releaseWorkflow) throw new SafeReleaseConfigurationError();
+    return this.releaseWorkflow;
+  }
 }
 
 /** 清理工作流未装配时抛出的确定性错误（与创建工作流未装配同语义）。 */
 class SafeCleanupConfigurationError extends McpError {
   constructor() {
     super(ErrorCode.InternalError, 'Transport cleanup workflow is not configured.');
+  }
+}
+
+/** 释放工作流未装配时抛出的确定性错误（与创建/清理工作流未装配同语义）。 */
+class SafeReleaseConfigurationError extends McpError {
+  constructor() {
+    super(ErrorCode.InternalError, 'Transport release workflow is not configured.');
   }
 }
 
@@ -247,6 +329,28 @@ function cleanupPlanIdSchema(): ToolDefinition['inputSchema'] {
       transportCleanupPlanId: { type: 'string', minLength: 1, maxLength: 128 }
     },
     required: ['transportCleanupPlanId']
+  };
+}
+
+/** 释放 preview 输入：仅 10 位请求号一个字段。 */
+function releasePreviewSchema(): ToolDefinition['inputSchema'] {
+  return {
+    type: 'object',
+    properties: {
+      transportNumber: { type: 'string', minLength: 10, maxLength: 10 }
+    },
+    required: ['transportNumber']
+  };
+}
+
+/** 释放 apply/status 输入：仅接受 server 生成的释放 plan id。 */
+function releasePlanIdSchema(): ToolDefinition['inputSchema'] {
+  return {
+    type: 'object',
+    properties: {
+      transportReleasePlanId: { type: 'string', minLength: 1, maxLength: 128 }
+    },
+    required: ['transportReleasePlanId']
   };
 }
 

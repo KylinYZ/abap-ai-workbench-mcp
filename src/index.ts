@@ -70,7 +70,9 @@ import { ObjectActivationWorkflow } from './safe/ObjectActivationWorkflow.js';
 import { TransportCreationPlanStore } from './safe/TransportCreationPlanStore.js';
 import { TransportCreationWorkflow } from './safe/TransportCreationWorkflow.js';
 import { TransportCleanupPlanStore } from './safe/TransportCleanupPlanStore.js';
+import { TransportReleasePlanStore } from './safe/TransportReleasePlanStore.js';
 import { TransportCleanupWorkflow } from './safe/TransportCleanupWorkflow.js';
+import { TransportReleaseWorkflow } from './safe/TransportReleaseWorkflow.js';
 import { RepositoryObjectCreationRegistry } from './safe/RepositoryObjectCreationRegistry.js';
 import { RepositoryObjectCreationPlanStore } from './safe/RepositoryObjectCreationPlanStore.js';
 import { RepositoryObjectCreationWorkflow } from './safe/RepositoryObjectCreationWorkflow.js';
@@ -1097,6 +1099,21 @@ export class AbapAdtServer extends Server {
       transportCleanupPlans,
       auditLogger
     );
+    // 受控传输请求释放工作流（受控释放边界：状态 D+本人属主，仅标准释放）：
+    // preview 只读核验两条红线并冻结 plan；apply 经原生确认后在执行门内单次
+    // 释放 + 轮询读回验证 status=R；无锁/ATC 绕行，他人/已释放请求不可释放。
+    const transportReleasePlans = new TransportReleasePlanStore(
+      this.safetyPolicy.planTtlMs,
+      () => Date.now(),
+      undefined,
+      this.guardrails.changePlanMaxEntries
+    );
+    const transportReleaseWorkflow = new TransportReleaseWorkflow(
+      this.adtClient,
+      this.safetyPolicy,
+      transportReleasePlans,
+      auditLogger
+    );
     this.safeTransportCreationHandlers = new SafeTransportCreationHandlers(transportCreationWorkflow, {
       supportsFormElicitation: () => Boolean(this.currentClientCapabilities()?.elicitation?.form),
       // 部署级自动确认开关：SAP_MCP_CONFIRMATION_MODE=auto（仅 DEV）时各确认链跳过人工表单
@@ -1109,6 +1126,12 @@ export class AbapAdtServer extends Server {
       autoApprove: () => this.safetyPolicy.confirmationAutoApprove,
       elicitInput: (params, timeoutMs) => this.elicitViaActiveRequest(params, timeoutMs),
       applyConfirmed: (planId, confirmationMode) => this.executionGate.run(() => transportCleanupWorkflow.apply(planId, confirmationMode))
+    }, transportReleaseWorkflow, {
+      supportsFormElicitation: () => Boolean(this.currentClientCapabilities()?.elicitation?.form),
+      // 部署级自动确认开关：SAP_MCP_CONFIRMATION_MODE=auto（仅 DEV）时各确认链跳过人工表单
+      autoApprove: () => this.safetyPolicy.confirmationAutoApprove,
+      elicitInput: (params, timeoutMs) => this.elicitViaActiveRequest(params, timeoutMs),
+      applyConfirmed: (planId, confirmationMode) => this.executionGate.run(() => transportReleaseWorkflow.apply(planId, confirmationMode))
     });
 
     this.focusedTaskHandlers = new FocusedTaskHandlers(

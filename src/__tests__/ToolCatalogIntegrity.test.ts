@@ -30,14 +30,14 @@ describe('tool catalog integrity and raw advanced role policy', () => {
 
   it.each([
     ['safe', 7],
-    // development 208：205 + 受控导入三件套（deploy-zip/fileio.import-export）
-    ['development', 208],
+    // development 211：208 + 受控释放三件套（2026-10-21 受控释放边界）
+    ['development', 211],
     // diagnostic-readonly 150：只读诊断入口（不含受控导入写链）
     ['diagnostic-readonly', 150],
     // legacy-full 220：专家完整面（不含受控导入链——同克隆/重命名链不进 legacy）
     ['legacy-full', 220],
-    // development-workbench 185：182 + 受控导入三件套（workbench 显式名单）
-    ['development-workbench', 185],
+    // development-workbench 188：185 + 受控释放三件套（workbench 显式名单）
+    ['development-workbench', 188],
     ['business-readonly', 18],
     // operations-readonly 58：运维只读面（不含受控导入写链）
     ['operations-readonly', 58]

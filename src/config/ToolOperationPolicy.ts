@@ -120,6 +120,17 @@ export const CONTROLLED_TRANSPORT_CLEANUP_TOOL_NAMES = new Set([
   'getTransportCleanupStatus'
 ]);
 
+/**
+ * 受控传输请求释放工具集合（所有者 2026-10-21 边界调整：受控释放 DEV 请求）：
+ * preview 核验"状态 D + 本人属主"两条红线并冻结 plan；apply 单次标准释放
+ * （newreleasejobs，无锁/ATC 绕行）+ 轮询读回验证 status=R；status 本地查询。
+ */
+export const CONTROLLED_TRANSPORT_RELEASE_TOOL_NAMES = new Set([
+  'previewTransportRelease',
+  'applyTransportRelease',
+  'getTransportReleaseStatus'
+]);
+
 // 受控对象重命名链（refactor.rename 一站式工作流）：单确认两步（克隆新对象
 // +受控删除旧对象），与受控创建/清理/克隆同面的 DEV 受控 profiles 专属链。
 export const CONTROLLED_RENAME_TOOL_NAMES = new Set([
@@ -147,7 +158,7 @@ const LOCAL_TOOL_NAMES = new Set([
   'getDebugOperationStatus', 'revokeDebugSession', 'getQualityCheckStatus', 'getDescriptionChangeStatus',
   'getRepositoryObjectCreationStatus', 'getRepositoryObjectCleanupStatus',
   'getObjectActivationStatus', 'getCloneObjectStatus', 'getControlledRenameStatus',
-  'getTransportCreationStatus', 'getTransportCleanupStatus',
+  'getTransportCreationStatus', 'getTransportCleanupStatus', 'getTransportReleaseStatus',
   'getMessageTextChangeStatus',
   'getTextPoolChangeStatus',
   'getUi5OperationStatus',
@@ -192,6 +203,9 @@ const READ_ONLY_TOOL_NAMES = new Set([
   // 受控传输清理 preview（空请求边界）：只读 transportDetails 核验三条红线
   //（未释放+零对象+本人属主）+ 本地冻结 plan，不触碰删除写路径
   'previewTransportCleanup',
+  // 受控传输释放 preview（受控释放边界）：只读 transportDetails 核验两条红线
+  //（状态 D+本人属主）+ 本地冻结 plan，不触碰释放写路径
+  'previewTransportRelease',
   // CDS 依赖分析三工具（能力矩阵 read.cds-analysis 行）：底层仅发只读 ADT GET/
   // usageReferences 查询，归入 read-only 类——QAS/PRD 角色自动可见可用
   'getCdsDependencies', 'getCdsImpactAnalysis', 'getCdsElementInfo',
@@ -347,6 +361,9 @@ const ADVANCED_MUTATION_TOOL_NAMES = new Set([
   // 受控传输请求清理 apply（空请求边界）：仅删"未释放+零对象+本人属主"请求，
   // 单确认单执行 + 缺席验证；非空/已释放/他人请求仍不可删
   'applyTransportCleanup',
+  // 受控传输请求释放 apply（受控释放边界）：仅标准释放"状态 D+本人属主"请求，
+  // 单确认单执行 + 轮询读回验证；无锁/ATC 绕行，他人/已释放请求仍不可释放
+  'applyTransportRelease',
   // 受控对象导入 apply（deploy-zip/fileio.import-export）：批量 repository 写入
   // （建/改 + 激活），逐对象漂移复核 + readback，单确认单执行
   'applyRepositoryObjectImport'
@@ -394,6 +411,7 @@ export const CONTROLLED_WRITE_CHAIN_READONLY_TOOLS = new Set<string>([
   ...CONTROLLED_CLONE_TOOL_NAMES,
   ...CONTROLLED_TRANSPORT_CREATION_TOOL_NAMES,
   ...CONTROLLED_TRANSPORT_CLEANUP_TOOL_NAMES,
+  ...CONTROLLED_TRANSPORT_RELEASE_TOOL_NAMES,
   ...CONTROLLED_RENAME_TOOL_NAMES,
   ...CONTROLLED_ACTIVATION_TOOL_NAMES,
   ...CONTROLLED_REPOSITORY_IMPORT_TOOL_NAMES
@@ -427,6 +445,8 @@ export function isToolAllowedForSystemRole(toolName: string, systemRole: string)
   if (CONTROLLED_TRANSPORT_CREATION_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
   // 受控传输清理链（空请求边界）：同上，删除动作整体 DEV 专属
   if (CONTROLLED_TRANSPORT_CLEANUP_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
+  // 受控传输释放链（受控释放边界）：同上，释放动作整体 DEV 专属
+  if (CONTROLLED_TRANSPORT_RELEASE_TOOL_NAMES.has(toolName)) return systemRole === 'DEV';
   return systemRole === 'DEV' || operationClass === 'local' || operationClass === 'read-only';
 }
 
@@ -576,6 +596,16 @@ export function assertToolOperationAllowed(toolName: string, profile: ToolProfil
       'POLICY_DENIED',
       'policy',
       'Controlled transport cleanup requires DEV development or development-workbench profile.'
+    );
+  }
+  // 受控传输释放链（受控释放边界）：仅 DEV + development/development-workbench；
+  // 红线（状态 D+本人属主）与"仅标准释放"在工作流内核验，此处只管 profile/role 面。
+  if (CONTROLLED_TRANSPORT_RELEASE_TOOL_NAMES.has(toolName)
+    && ((profile !== 'development' && profile !== 'development-workbench') || systemRole !== 'DEV')) {
+    throw new SafeAbapError(
+      'POLICY_DENIED',
+      'policy',
+      'Controlled transport release requires DEV development or development-workbench profile.'
     );
   }
   // 受控对象导入链（deploy-zip/fileio.import-export）：仅 DEV +

@@ -90,7 +90,7 @@ describe('modern protocol (2026-07-28) surface', () => {
     try {
       const listed = await client.listTools();
       // focused（development-workbench）profile 的运行时数量基线
-      expect(listed.tools.length).toBe(185);
+      expect(listed.tools.length).toBe(188);
       const listResultOnWire = outbound.find(m => {
         const candidate = m as { result?: { tools?: unknown[] } };
         return 'result' in m && Array.isArray(candidate.result?.tools);
@@ -112,7 +112,7 @@ describe('modern protocol (2026-07-28) surface', () => {
     await client.connect(clientTransport);
     try {
       const listed = await client.listTools();
-      expect(listed.tools.length).toBe(185);
+      expect(listed.tools.length).toBe(188);
       // legacy era 结果不携带 2026 专属字段（era 编码按连接分流）
       expect(listed).not.toHaveProperty('ttlMs');
     } finally {

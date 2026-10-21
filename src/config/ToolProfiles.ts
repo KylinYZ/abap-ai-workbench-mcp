@@ -57,11 +57,16 @@ export const DEVELOPMENT_WORKBENCH_TOOL_NAMES = new Set([
   // 受控对象激活链（devtools.activate 缺口）：workbench 面显式收录三工具
   'previewObjectActivation', 'applyObjectActivation', 'getObjectActivationStatus',
   // 受控传输请求创建链（cts.create-request 专属动作，仅创建）：workbench 面
-  // 显式收录三工具；释放/改属主不收录（仍停留在 legacy-full 原子面）
+  // 显式收录三工具；改属主不收录（仍停留在 legacy-full 原子面），释放走
+  // 下方受控释放链（2026-10-21 起受控放开）
   'previewTransportCreation', 'applyTransportCreation', 'getTransportCreationStatus',
   // 受控传输请求清理链（空请求边界：未释放+零对象+本人属主才可删）：
   // workbench 面显式收录三工具；非空/已释放/他人请求仍不可删
   'previewTransportCleanup', 'applyTransportCleanup', 'getTransportCleanupStatus',
+  // 受控传输请求释放链（受控释放边界：状态 D+本人属主，2026-10-21 所有者
+  // 放开受控释放）：workbench 面显式收录三工具；仅标准释放（无锁/ATC 绕行），
+  // 改属主/加用户/STMS 导入仍不收录
+  'previewTransportRelease', 'applyTransportRelease', 'getTransportReleaseStatus',
   // CDS 依赖分析三工具（read.cds-analysis）：只读诊断能力，workbench 面显式收录
   'getCdsDependencies', 'getCdsImpactAnalysis', 'getCdsElementInfo',
   // Wave 3 分析五工具：源码 grep/交叉引用/应用日志（只读）+ 覆盖率执行（other-mutation）

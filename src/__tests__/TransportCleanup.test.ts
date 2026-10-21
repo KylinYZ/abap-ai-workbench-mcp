@@ -297,7 +297,9 @@ describe('SafeTransportCreationHandlers cleanup trio', () => {
     const { handlers } = setupHandlers();
     expect(handlers.getTools().map(tool => tool.name)).toEqual([
       'previewTransportCreation', 'applyTransportCreation', 'getTransportCreationStatus',
-      ...CLEANUP_TOOL_NAMES
+      ...CLEANUP_TOOL_NAMES,
+      // 2026-10-21 起追加受控释放三件套（细节由 TransportRelease.test.ts 断言）
+      'previewTransportRelease', 'applyTransportRelease', 'getTransportReleaseStatus'
     ]);
     const cleanupTools = handlers.getTools().filter(tool => CLEANUP_TOOL_NAMES.includes(tool.name));
     expect(cleanupTools.map(tool => tool._meta?.approvalRequired)).toEqual([false, true, false]);

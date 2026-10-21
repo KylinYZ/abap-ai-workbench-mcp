@@ -303,7 +303,10 @@ describe('SafeTransportCreationHandlers', () => {
         _meta: expect.objectContaining({ approvalRequired: true })
       }),
       expect.objectContaining({ name: 'getTransportCreationStatus', annotations: expect.objectContaining({ readOnlyHint: true }) }),
-      ...CLEANUP_TOOL_NAMES.map(name => expect.objectContaining({ name }))
+      ...CLEANUP_TOOL_NAMES.map(name => expect.objectContaining({ name })),
+      // 2026-10-21 起追加受控释放三件套（细节由 TransportRelease.test.ts 断言）
+      ...['previewTransportRelease', 'applyTransportRelease', 'getTransportReleaseStatus']
+        .map(name => expect.objectContaining({ name }))
     ]);
     expect(handlers.supports('previewTransportCreation')).toBe(true);
     expect(handlers.supports('previewTransportCleanup')).toBe(true);
